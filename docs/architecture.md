@@ -92,13 +92,15 @@ layers:
 
 ## 9. Verification status
 
-| Check                                                                                                                                     | Last run   | Result |
-| ----------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------ |
-| `pnpm run check` (format, lint, typecheck, unit, integration, build, smoke)                                                               | 2026-10-27 | pass   |
-| Lint catches seeded violations (relative path, cycle, layer zone, adapter import, R1, R7, missing doc, `@remarks` beside `{@inheritDoc}`) | 2026-10-26 | pass   |
-| Lint catches seeded violations (missing `@param`, misnamed `@param`; `{@inheritDoc}` alone stays exempt)                                  | 2026-10-27 | pass   |
-| Lint catches a seeded vague summary (`Applies one revision.` on `ReviseDocument.run`, CMT-13); it inspects all 15 method summaries        | 2026-10-27 | pass   |
-| `validate-project.mjs`                                                                                                                    | 2026-10-27 | pass   |
+| Check                                                                                                                                                                                                                                                | Last run   | Result |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------ |
+| `pnpm run check` (format, lint, typecheck, unit, integration, build, smoke)                                                                                                                                                                          | 2026-10-27 | pass   |
+| Lint catches seeded violations (relative path, cycle, layer zone, adapter import, R1, R7, missing doc, `@remarks` beside `{@inheritDoc}`)                                                                                                            | 2026-10-26 | pass   |
+| Lint catches seeded violations (missing `@param`, misnamed `@param`; `{@inheritDoc}` alone stays exempt)                                                                                                                                             | 2026-10-27 | pass   |
+| Lint catches a seeded vague summary (`Applies one revision.` on `ReviseDocument.run`, CMT-13); it inspects all 15 method summaries                                                                                                                   | 2026-10-27 | pass   |
+| Lint catches seeded adapter-doc violations (`{@inheritDoc}` alone, no `{@link Port.member}`, a block tag beside it; CMT-12) and the editor hover shows the adapter's summary plus the port's `@param`/`@returns` (TypeScript 6.0.3 language service) | 2026-10-27 | pass   |
+| Lint catches seeded re-exports (`export { X } from`, `export * from`; TSN-18)                                                                                                                                                                        | 2026-10-27 | pass   |
+| `validate-project.mjs`                                                                                                                                                                                                                               | 2026-10-27 | pass   |
 
 ## 10. Known gaps / out of scope
 

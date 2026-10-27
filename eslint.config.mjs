@@ -5,16 +5,22 @@ import { createTypeScriptImportResolver } from "eslint-import-resolver-typescrip
 import importX from "eslint-plugin-import-x";
 import jsdoc from "eslint-plugin-jsdoc";
 import tsdoc from "eslint-plugin-tsdoc";
-import localDocs from "./eslint/specific-summary.mjs";
+import localDocs from "./eslint/local-docs.mjs";
 
-// require-param / require-returns skip a doc comment that is only `{@inheritDoc Port.member}`: the inherited
-// contract already carries @param and @returns (CMT-12, TSN-13).
-const notInheriting = ["ArrowFunctionExpression", "FunctionDeclaration", "FunctionExpression"].map(
-  (context) => ({
-    context,
-    comment: 'JsdocBlock:not(:has(JsdocInlineTag[tag="inheritDoc"]))',
-  }),
-);
+// require-param / require-returns skip a method that implements an interface member and links it
+// (`{@link Port.member}`): the editor shows the port's @param and @returns there (CMT-12, TSN-13).
+// local-docs/implementation-summary checks that such a method links its own contract.
+const implementing =
+  "ClassDeclaration[implements.length>0] > ClassBody > MethodDefinition > FunctionExpression";
+const notInheriting = [
+  { context: "ArrowFunctionExpression" },
+  { context: "FunctionDeclaration" },
+  { context: `FunctionExpression:not(${implementing})` },
+  {
+    context: implementing,
+    comment: 'JsdocBlock:not(:has(JsdocInlineTag[tag="link"][namepathOrURL=/\\./]))',
+  },
+];
 import tseslint from "typescript-eslint";
 
 // IMP-1, TSN-16: a relative path may name only a file in the importing file's own folder.
@@ -25,6 +31,18 @@ const noRelativeOutsideFolder = {
 
 // PDM-class-modeled-R7: free functions only in the Tier B files listed in docs/architecture.md §7.
 const tierB = ["src/main.ts", "src/infrastructure/config.ts"];
+// TSN-18: no barrel files. A file never re-exports; import the file that declares the symbol.
+const noReExports = [
+  {
+    selector: "ExportAllDeclaration",
+    message: "No re-exports: import the declaring file (TSN-18)",
+  },
+  {
+    selector: "ExportNamedDeclaration[source]",
+    message: "No re-exports: import the declaring file (TSN-18)",
+  },
+];
+
 const noFreeFunctions = [
   "Program > FunctionDeclaration",
   "Program > ExportNamedDeclaration > FunctionDeclaration",
@@ -114,13 +132,18 @@ export default tseslint.config(
   {
     files: ["src/**/*.ts"],
     ignores: [...tierB, "src/**/*.test.ts"],
-    rules: { "no-restricted-syntax": ["error", ...noFreeFunctions] },
+    rules: { "no-restricted-syntax": ["error", ...noFreeFunctions, ...noReExports] },
+  },
+  {
+    // Tier B files keep free functions but still may not re-export.
+    files: tierB,
+    rules: { "no-restricted-syntax": ["error", ...noReExports] },
   },
   {
     files: ["src/domain/**/*.ts"],
     ignores: ["src/**/*.test.ts"],
     rules: {
-      "no-restricted-syntax": ["error", ...noFreeFunctions, ...domainState],
+      "no-restricted-syntax": ["error", ...noFreeFunctions, ...noReExports, ...domainState],
     },
   },
   {
@@ -133,6 +156,8 @@ export default tseslint.config(
       "tsdoc/syntax": "error",
       // CMT-13: a summary must add facts beyond the member and class names.
       "local-docs/specific-summary": ["error", { minWords: 3 }],
+      // CMT-12: an implementation has its own summary and links the contract it fulfils.
+      "local-docs/implementation-summary": "error",
       "jsdoc/require-jsdoc": [
         "error",
         {
