@@ -1,48 +1,28 @@
-import type { ErrorRequestHandler } from "express";
-import type { Logger } from "pino";
+import { StatusCodes } from "http-status-codes";
 import type { ReviseDocumentError } from "@/application/ReviseDocument.js";
+import { ProblemDetails } from "@/interface/ProblemDetails.js";
 
-/** The single place that turns failures into HTTP responses (TSN-11, EXP-5). */
+/** Reasons a documents route refuses a request: the use cases' errors plus a body that failed validation. */
+export type DocumentsRefusal = ReviseDocumentError | "invalid-request";
+
+/** The single place that turns this module's refusals into HTTP problems (TSN-11, EXP-5, EXP-8). */
 export class HttpErrorMapper {
-  // A Record over the union makes the compiler reject a new error code that has no status.
-  readonly #statuses: Readonly<Record<ReviseDocumentError, number>> = {
-    "not-found": 404,
-    "version-conflict": 409,
-    "invalid-body": 422,
+  // A Record over the union makes the compiler reject a new refusal that has no status.
+  readonly #statuses: Readonly<Record<DocumentsRefusal, number>> = {
+    "invalid-request": StatusCodes.BAD_REQUEST,
+    "not-found": StatusCodes.NOT_FOUND,
+    "version-conflict": StatusCodes.CONFLICT,
+    "invalid-body": StatusCodes.UNPROCESSABLE_ENTITY,
   };
 
   /**
-   * Binds the mapper to the logger that records unexpected failures.
+   * Returns the problem a client receives for an expected refusal, with no I/O and no logging: a
+   * refusal is always a 4xx, never a 500.
    *
-   * @param logger - Receives one `request.failed` event per 500 response.
+   * @param reason - Why the route or its use case refused the request.
+   * @returns A problem with `type` `/problems/<reason>`: 400, 404, 409 or 422.
    */
-  public constructor(private readonly logger: Logger) {}
-
-  /**
-   * Returns the HTTP status a client receives when a use case refuses a request, with no I/O and no
-   * logging: an expected refusal is a 4xx, never a 500.
-   *
-   * @param error - The reason a use case refused the request.
-   * @returns 404, 409 or 422.
-   */
-  public statusFor(error: ReviseDocumentError): number {
-    return this.#statuses[error];
-  }
-
-  /**
-   * Builds the Express error middleware for thrown errors, mounted after every route.
-   *
-   * @returns Middleware that answers 4xx for malformed requests and 500 for everything else.
-   */
-  public handler(): ErrorRequestHandler {
-    return (err: unknown, _req, res, _next) => {
-      // The JSON body parser marks malformed input with a 4xx status; anything else is a bug or an I/O failure.
-      const status =
-        typeof err === "object" && err !== null && "status" in err && typeof err.status === "number"
-          ? err.status
-          : 500;
-      if (status >= 500) this.logger.error({ err }, "request.failed");
-      res.status(status).json({ error: status >= 500 ? "internal" : "invalid-request" });
-    };
+  public problemFor(reason: DocumentsRefusal): ProblemDetails {
+    return ProblemDetails.forReason(this.#statuses[reason], reason);
   }
 }

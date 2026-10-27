@@ -71,15 +71,15 @@ layers:
 
 ## 6. External dependencies
 
-| Dependency | Kind | Used for                                                                           | Doc |
-| ---------- | ---- | ---------------------------------------------------------------------------------- | --- |
-| none       | n/a  | Libraries only: express (HTTP), zod (input and config validation), pino (logging). | n/a |
+| Dependency | Kind | Used for                                                                                                                                                                 | Doc |
+| ---------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --- |
+| none       | n/a  | Libraries only: express (HTTP), zod (input and config validation), pino (logging), http-status-codes (status constants and reason phrases, interface ring only, DR-003). | n/a |
 
 ## 7. Cross-cutting concerns
 
 - **Config:** `src/infrastructure/config.ts` validates `PORT` and `LOG_LEVEL` once at startup and freezes the result (TSN-9).
 - **Logging:** one pino logger created in `main.ts` and injected; `no-console` in lint (TSN-10).
-- **Errors:** expected failures are `Result` values; `HttpErrorMapper` is the single place that turns them, and thrown errors, into HTTP responses (TSN-11, EXP-5).
+- **Errors:** expected failures are `Result` values. `HttpErrorMapper` turns refusals into RFC 9457 problems (`application/problem+json`, `type` `/problems/<reason>`), and `src/interface/ErrorMiddleware.ts` turns thrown errors into `about:blank` problems, logging every 500 (TSN-11, EXP-5, EXP-8). Status constants come from `http-status-codes`, imported only under `src/interface/` (TSN-19, DR-003).
 - **Input validation:** zod schema `ReviseDocumentBody` at the HTTP boundary, strict (EXP-7).
 - Tier B files: `src/main.ts` (process entry point), `src/infrastructure/config.ts` (config declaration). Everything else is Tier A (classes); lint enforces the list (PDM-class-modeled-R7).
 
@@ -89,6 +89,8 @@ layers:
 | ------- | --------------------------------------- | ------------------------------------- |
 | DR-001  | Toolchain and alias mechanism for `api` | specs/001-revise-document/research.md |
 | PDM-api | Paradigm for `api`                      | specs/001-revise-document/research.md |
+| DR-002  | Layer-first layout (opt-in)             | specs/001-revise-document/research.md |
+| DR-003  | HTTP status-code source                 | specs/001-revise-document/research.md |
 
 ## 9. Verification status
 
@@ -100,6 +102,8 @@ layers:
 | Lint catches a seeded vague summary (`Applies one revision.` on `ReviseDocument.run`, CMT-13); it inspects all 15 method summaries                                                                                                                   | 2026-10-27 | pass   |
 | Lint catches seeded adapter-doc violations (`{@inheritDoc}` alone, no `{@link Port.member}`, a block tag beside it; CMT-12) and the editor hover shows the adapter's summary plus the port's `@param`/`@returns` (TypeScript 6.0.3 language service) | 2026-10-27 | pass   |
 | Lint catches seeded re-exports (`export { X } from`, `export * from`; TSN-18)                                                                                                                                                                        | 2026-10-27 | pass   |
+| Error bodies are RFC 9457 problems: integration tests assert status, `application/problem+json` and the body for 400 (validation and malformed JSON), 404 and 409                                                                                    | 2026-10-28 | pass   |
+| Lint catches a seeded `http-status-codes` import in `src/application/` (TSN-19)                                                                                                                                                                      | 2026-10-28 | pass   |
 | `validate-project.mjs`                                                                                                                                                                                                                               | 2026-10-27 | pass   |
 
 ## 10. Known gaps / out of scope
