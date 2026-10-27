@@ -72,15 +72,15 @@ modules:
 
 ## 6. External dependencies
 
-| Dependency | Kind | Used for                                                                           | Doc |
-| ---------- | ---- | ---------------------------------------------------------------------------------- | --- |
-| none       | n/a  | Libraries only: express (HTTP), zod (input and config validation), pino (logging). | n/a |
+| Dependency | Kind | Used for                                                                                                                                                                 | Doc |
+| ---------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --- |
+| none       | n/a  | Libraries only: express (HTTP), zod (input and config validation), pino (logging), http-status-codes (status constants and reason phrases, interface ring only, DR-003). | n/a |
 
 ## 7. Cross-cutting concerns
 
 - **Config:** `src/shared/infrastructure/config.ts` validates `PORT` and `LOG_LEVEL` once at startup and freezes the result (TSN-9).
 - **Logging:** one pino logger created in `main.ts` and injected; `no-console` in lint (TSN-10).
-- **Errors:** expected failures are `Result` values; `HttpErrorMapper` is the single place that turns them, and thrown errors, into HTTP responses (TSN-11, EXP-5).
+- **Errors:** expected failures are `Result` values. Each module's `HttpErrorMapper` turns its refusals into RFC 9457 problems (`application/problem+json`, `type` `/problems/<reason>`), and `shared/interface/ErrorMiddleware` turns thrown errors into `about:blank` problems, logging every 500 (TSN-11, EXP-5, EXP-8). Status constants come from `http-status-codes`, imported only under `interface/` (TSN-19, DR-003).
 - **Input validation:** zod schema `ReviseDocumentBody` at the HTTP boundary, strict (EXP-7).
 - Tier B files: `src/main.ts` (process entry point), `src/shared/infrastructure/config.ts` (config declaration). Everything else is Tier A (classes); lint enforces the list (PDM-class-modeled-R7).
 
@@ -90,6 +90,7 @@ modules:
 | ------- | --------------------------------------- | ------------------------------------- |
 | DR-001  | Toolchain and alias mechanism for `api` | specs/001-revise-document/research.md |
 | PDM-api | Paradigm for `api`                      | specs/001-revise-document/research.md |
+| DR-003  | HTTP status-code source                 | specs/001-revise-document/research.md |
 | DR-002  | Feature-first layout (pure move)        | specs/001-revise-document/research.md |
 
 ## 9. Verification status
@@ -104,11 +105,12 @@ modules:
 | Lint catches seeded re-exports (`export { X } from`, `export * from`; TSN-18)                                                                                                                                                                                                                                        | 2026-10-27 | pass   |
 | Pure move to feature-first (DR-002): `pnpm run check` passes with the same 7 unit and 4 integration tests, unchanged                                                                                                                                                                                                 | 2026-10-27 | pass   |
 | Lint catches seeded module-boundary violations: `documents/domain` from another module, `documents/application/ports`, the composition root from a module, `shared` importing `documents`, and layer direction inside a module (domain → application, application → infrastructure); a public use-case import passes | 2026-10-27 | pass   |
+| Error bodies are RFC 9457 problems: integration tests assert status, `application/problem+json` and the body for 400 (validation and malformed JSON), 404 and 409                                                                                                                                                    | 2026-10-27 | pass   |
+| Lint catches a seeded `http-status-codes` import in `application/` (TSN-19), with the relative-path rule still active in that block                                                                                                                                                                                  | 2026-10-27 | pass   |
 | `validate-project.mjs`                                                                                                                                                                                                                                                                                               | 2026-10-27 | pass   |
 
 ## 10. Known gaps / out of scope
 
 - No persistent store, authentication, or create/read endpoints: the reference shows one write path through every layer, nothing more.
-- `HttpErrorMapper` lives in `documents/interface/errors/` because it maps `ReviseDocumentError`; its generic error middleware moves to `shared/interface/` with Problem Details (proposal v2.1.0).
 - The layer-first layout of the same code is maintained on branch `layout/layer-first` (tags `v1.x`).
 - CI (`.github/workflows/check.yml`) runs `pnpm run check`, `pnpm audit` and the framework validator; run `pnpm run check` locally before pushing.

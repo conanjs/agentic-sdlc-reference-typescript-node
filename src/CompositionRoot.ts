@@ -5,6 +5,7 @@ import { ReviseDocument } from "@/documents/application/ReviseDocument.js";
 import { InMemoryDocumentStore } from "@/documents/infrastructure/InMemoryDocumentStore.js";
 import { HttpErrorMapper } from "@/documents/interface/errors/HttpErrorMapper.js";
 import { ReviseDocumentHandler } from "@/documents/interface/routes/ReviseDocumentHandler.js";
+import { ErrorMiddleware } from "@/shared/interface/ErrorMiddleware.js";
 
 /**
  * The only class that knows concrete adapters: it builds the object graph and the HTTP app
@@ -28,15 +29,17 @@ export class CompositionRoot {
    * @returns An app that is not listening yet, so tests can bind it to a free port.
    */
   public app(): Express {
-    const errors = new HttpErrorMapper(this.logger);
-    const revise = new ReviseDocumentHandler(new ReviseDocument(this.documents), errors);
+    const revise = new ReviseDocumentHandler(
+      new ReviseDocument(this.documents),
+      new HttpErrorMapper(),
+    );
 
     const app = express();
     app.disable("x-powered-by");
     app.use(express.json({ limit: "10kb" }));
     // The route table: one line per route, so every endpoint is visible in one place.
     app.put("/documents/:id", (req, res) => revise.handle(req, res));
-    app.use(errors.handler());
+    app.use(new ErrorMiddleware(this.logger).handler());
     return app;
   }
 }
