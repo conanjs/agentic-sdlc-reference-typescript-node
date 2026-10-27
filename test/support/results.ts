@@ -1,4 +1,4 @@
-import type { Result } from "@/shared/domain/Result.js";
+import type { Result } from "@/modules/shared/domain/Result.js";
 
 /**
  * Returns the value of a successful result and fails the test otherwise.

@@ -31,7 +31,7 @@ const noRelativeOutsideFolder = {
 };
 
 // PDM-class-modeled-R7: free functions only in the Tier B files listed in docs/architecture.md §7.
-const tierB = ["src/main.ts", "src/shared/infrastructure/config.ts"];
+const tierB = ["src/main.ts", "src/modules/shared/infrastructure/config.ts"];
 // TSN-18: no barrel files. A file never re-exports; import the file that declares the symbol.
 const noReExports = [
   {
@@ -71,8 +71,8 @@ const domainState = [
   },
 ];
 
-// Feature modules (MOD-9): every folder under src/ except shared/. docs/architecture.md §4 lists the same set.
-const modules = readdirSync("src", { withFileTypes: true })
+// Feature modules (MOD-9): every folder under src/modules/ except shared/. docs/architecture.md §4 lists the same set.
+const modules = readdirSync("src/modules", { withFileTypes: true })
   .filter((d) => d.isDirectory() && d.name !== "shared")
   .map((d) => d.name);
 
@@ -82,14 +82,21 @@ const modules = readdirSync("src", { withFileTypes: true })
 // cannot bypass them.
 const layerZones = [
   {
-    target: "./src/*/domain/**",
-    from: ["./src/*/application/**", "./src/*/infrastructure/**", "./src/*/interface/**"],
+    target: "./src/modules/*/domain/**",
+    from: [
+      "./src/modules/*/application/**",
+      "./src/modules/*/infrastructure/**",
+      "./src/modules/*/interface/**",
+    ],
   },
-  { target: "./src/*/application/**", from: ["./src/*/infrastructure/**", "./src/*/interface/**"] },
-  { target: "./src/*/infrastructure/**", from: ["./src/*/interface/**"] },
-  { target: "./src/*/interface/**", from: ["./src/*/infrastructure/**"] },
   {
-    target: ["./src/!(CompositionRoot|main).ts", "./src/*/**"],
+    target: "./src/modules/*/application/**",
+    from: ["./src/modules/*/infrastructure/**", "./src/modules/*/interface/**"],
+  },
+  { target: "./src/modules/*/infrastructure/**", from: ["./src/modules/*/interface/**"] },
+  { target: "./src/modules/*/interface/**", from: ["./src/modules/*/infrastructure/**"] },
+  {
+    target: ["./src/!(CompositionRoot|main).ts", "./src/modules/**"],
     from: ["./src/CompositionRoot.ts", "./src/main.ts"],
   },
 ];
@@ -102,21 +109,21 @@ const moduleZones = [
       .filter((from) => from !== target)
       .flatMap((from) => [
         {
-          target: `./src/${target}`,
-          from: `./src/${from}`,
+          target: `./src/modules/${target}`,
+          from: `./src/modules/${from}`,
           except: ["./application"],
           message: `${target} may import only ${from}/application (MOD-3)`,
         },
         {
-          target: `./src/${target}`,
-          from: `./src/${from}/application/ports`,
+          target: `./src/modules/${target}`,
+          from: `./src/modules/${from}/application/ports`,
           message: `Ports of ${from} are not public (MOD-3)`,
         },
       ]),
   ),
   ...modules.map((from) => ({
-    target: "./src/shared",
-    from: `./src/${from}`,
+    target: "./src/modules/shared",
+    from: `./src/modules/${from}`,
     message: "shared/ imports no feature module (MOD-4)",
   })),
 ];
@@ -159,7 +166,7 @@ export default tseslint.config(
     // TSN-19: HTTP status codes are a delivery detail, so the library is used only in interface/.
     // Repeats noRelativeOutsideFolder: a later block's no-restricted-imports options replace earlier ones.
     files: ["src/**/*.ts"],
-    ignores: ["src/*/interface/**", "src/**/*.test.ts"],
+    ignores: ["src/modules/*/interface/**", "src/**/*.test.ts"],
     rules: {
       "no-restricted-imports": [
         "error",
@@ -194,7 +201,7 @@ export default tseslint.config(
     rules: { "no-restricted-syntax": ["error", ...noReExports] },
   },
   {
-    files: ["src/*/domain/**/*.ts"],
+    files: ["src/modules/*/domain/**/*.ts"],
     ignores: ["src/**/*.test.ts"],
     rules: {
       "no-restricted-syntax": ["error", ...noFreeFunctions, ...noReExports, ...domainState],

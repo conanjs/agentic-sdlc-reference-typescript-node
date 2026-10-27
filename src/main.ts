@@ -1,7 +1,7 @@
 // Tier B (PDM-class-modeled-R7, docs/architecture.md §7): the process entry point.
 // It reads config, creates the logger and starts listening; all wiring is in CompositionRoot.
 import { pino } from "pino";
-import { loadConfig } from "@/shared/infrastructure/config.js";
+import { loadConfig } from "@/modules/shared/infrastructure/config.js";
 import { CompositionRoot } from "./CompositionRoot.js";
 
 const config = loadConfig(process.env);
