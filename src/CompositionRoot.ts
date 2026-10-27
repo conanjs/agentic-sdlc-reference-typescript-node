@@ -1,11 +1,11 @@
 import express, { type Express } from "express";
 import type { Logger } from "pino";
-import type { DocumentStore } from "@/documents/application/ports/DocumentStore.js";
-import { ReviseDocument } from "@/documents/application/ReviseDocument.js";
-import { InMemoryDocumentStore } from "@/documents/infrastructure/InMemoryDocumentStore.js";
-import { HttpErrorMapper } from "@/documents/interface/errors/HttpErrorMapper.js";
-import { ReviseDocumentHandler } from "@/documents/interface/routes/ReviseDocumentHandler.js";
-import { ErrorMiddleware } from "@/shared/interface/ErrorMiddleware.js";
+import type { DocumentStore } from "@/modules/documents/application/ports/DocumentStore.js";
+import { ReviseDocument } from "@/modules/documents/application/ReviseDocument.js";
+import { InMemoryDocumentStore } from "@/modules/documents/infrastructure/InMemoryDocumentStore.js";
+import { HttpErrorMapper } from "@/modules/documents/interface/errors/HttpErrorMapper.js";
+import { ReviseDocumentHandler } from "@/modules/documents/interface/routes/ReviseDocumentHandler.js";
+import { ErrorMiddleware } from "@/modules/shared/interface/ErrorMiddleware.js";
 
 /**
  * The only class that knows concrete adapters: it builds the object graph and the HTTP app

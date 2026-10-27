@@ -1,7 +1,7 @@
 import type { ErrorRequestHandler } from "express";
 import { StatusCodes } from "http-status-codes";
 import type { Logger } from "pino";
-import { ProblemDetails } from "@/shared/interface/ProblemDetails.js";
+import { ProblemDetails } from "@/modules/shared/interface/ProblemDetails.js";
 
 /** Turns errors thrown anywhere in a request into problem responses, for every module (EXP-5, EXP-8). */
 export class ErrorMiddleware {

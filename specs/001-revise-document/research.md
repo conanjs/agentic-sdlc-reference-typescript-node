@@ -45,3 +45,14 @@ Decision records for the reference implementation (`decision-record/v2`).
 - **Confidence:** high
 - **Supersedes:** none
 - **Decided by:** owner (V) · **Approved at:** 2026-10-27
+
+## DR-004: Modules under src/modules/ for api
+
+- **Tree path:** framework MOD-9 (feature-first default; modules, `shared` included, live under `src/modules/`)
+- **Criteria:** `src/` will hold more than modules (jobs, CLI entry points, migrations, generated code), so the modules need one folder of their own; `shared` is a module (it has the four layers and a public surface) but not a feature.
+- **Options considered:** `src/modules/<module>/` | `src/features/<feature>/` with `src/shared/` beside it | modules directly under `src/` (DR-002 as first shipped)
+- **Chosen:** `src/modules/<module>/`, with `src/modules/shared/` — a pure move; same files, same tests.
+- **Rejected:** `features/` — `shared` is not a feature, so it would have to stay outside, and one bounded context may hold several features; modules directly under `src/` — ambiguous once non-module folders appear.
+- **Confidence:** high
+- **Supersedes:** none
+- **Decided by:** owner (V) · **Approved at:** 2026-10-28
