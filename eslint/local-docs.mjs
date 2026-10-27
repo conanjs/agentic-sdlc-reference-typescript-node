@@ -1,4 +1,6 @@
-// CMT-13, TSN-13: a doc summary must say more than the names around it. `jsdoc/informative-docs` compares a
+// Documentation rules no published plugin has (TSN-13). Copied into each repo as one file.
+//
+// specific-summary (CMT-13): a doc summary must say more than the names around it. `jsdoc/informative-docs` compares a
 // summary with its own symbol only, so `/** Applies one revision. */` on `ReviseDocument.run` passes it. This
 // rule also removes the words of the enclosing class or interface and fails when fewer than `minWords`
 // content words are left. It is a floor, not a judge: a long summary can still be vague (llm, RUB-10).
@@ -65,9 +67,63 @@ const namesAround = (node) => {
   return names.flatMap(wordsOf);
 };
 
+// implementation-summary (CMT-12): a method that implements an interface member gets its own summary,
+// linking the contract it fulfils and saying what this implementation adds. Measured on TypeScript 6.0:
+// the editor shows `{@inheritDoc X.y}` as literal text, so an adapter documented that way has no visible
+// summary; and it copies the interface's @param/@returns only while the method's comment has no block
+// tag at all, so extra failures go in the summary sentence, not in @throws.
+const implementationSummary = {
+  meta: {
+    type: "suggestion",
+    docs: { description: "Implementations have their own summary that links their contract" },
+    schema: [],
+    messages: {
+      inheritDoc:
+        "Editors show {@inheritDoc} as raw text. Write this implementation's own summary and link {@link {{contract}}} (CMT-12).",
+      noLink: "Link the contract this method fulfils: {@link {{contract}}} (CMT-12).",
+      blockTag:
+        "A block tag ({{tag}}) stops the editor showing {{contract}}'s @param/@returns; say it in the summary (CMT-12).",
+    },
+  },
+  create(context) {
+    const services = context.sourceCode.parserServices;
+    const checker = services?.program?.getTypeChecker();
+    // Returns the name of the implemented interface that declares `member`, or undefined.
+    const contractOf = (classNode, member) => {
+      for (const clause of classNode.implements ?? []) {
+        const tsNode = services.esTreeNodeToTSNodeMap.get(clause);
+        if (checker.getTypeAtLocation(tsNode).getProperty(member) !== undefined)
+          return context.sourceCode.getText(clause.expression);
+      }
+      return undefined;
+    };
+    return {
+      "ClassDeclaration[implements.length>0] > ClassBody > MethodDefinition[kind='method']"(node) {
+        if (checker === undefined || node.static || node.key.type !== "Identifier") return;
+        if (node.accessibility === "private" || node.accessibility === "protected") return;
+        const iface = contractOf(node.parent.parent, node.key.name);
+        if (iface === undefined) return;
+        const contract = `${iface}.${node.key.name}`;
+        const comment = context.sourceCode
+          .getCommentsBefore(node)
+          .findLast((c) => c.type === "Block" && c.value.startsWith("*"));
+        if (comment === undefined) return; // jsdoc/require-jsdoc reports it
+        const report = (messageId, data = {}) =>
+          context.report({ loc: comment.loc, messageId, data: { contract, ...data } });
+        if (comment.value.includes("@inheritDoc")) return report("inheritDoc");
+        if (!new RegExp(`\\{@link\\s+${contract.replace(".", "\\.")}\\b`).test(comment.value))
+          return report("noLink");
+        const tag = comment.value.match(/^\s*\*?\s*(@\w+)/m)?.[1];
+        if (tag !== undefined) report("blockTag", { tag });
+      },
+    };
+  },
+};
+
 export default {
   meta: { name: "local-docs" },
   rules: {
+    "implementation-summary": implementationSummary,
     "specific-summary": {
       meta: {
         type: "suggestion",
