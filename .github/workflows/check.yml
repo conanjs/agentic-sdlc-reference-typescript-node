@@ -30,6 +30,8 @@ jobs:
           repository: conanjs/agent-config
           ref: ${{ env.FRAMEWORK_REF }}
           path: .agent-config
-          sparse-checkout: copilot/frameworks/agentic-sdlc
+          sparse-checkout: |
+            copilot/frameworks/agentic-sdlc
+            copilot/procedures
       - name: Validate against the framework
-        run: node .agent-config/copilot/frameworks/agentic-sdlc/tools/validate-project.mjs . --framework .agent-config/copilot/frameworks/agentic-sdlc
+        run: node .agent-config/copilot/frameworks/agentic-sdlc/tools/validate-project.mjs . --framework .agent-config/copilot/frameworks/agentic-sdlc --procedures .agent-config/copilot/procedures
