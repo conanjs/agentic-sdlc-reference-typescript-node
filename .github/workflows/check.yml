@@ -1,0 +1,35 @@
+# Runs the reference's own checks, then the Agentic SDLC project validator from the framework repo,
+# pinned to a framework commit (a tag can move; a full SHA cannot). Bump FRAMEWORK_REF when the
+# framework's rules change.
+name: check
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      framework-ref:
+        description: agent-config commit or branch to validate against
+        required: false
+env:
+  FRAMEWORK_REF: ${{ inputs.framework-ref || '7bbe14fc0c2b947feb093e6f1266f3745357db23' }}
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4, version from packageManager
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run check
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: conanjs/agent-config
+          ref: ${{ env.FRAMEWORK_REF }}
+          path: .agent-config
+          sparse-checkout: copilot/frameworks/agentic-sdlc
+      - name: Validate against the framework
+        run: node .agent-config/copilot/frameworks/agentic-sdlc/tools/validate-project.mjs . --framework .agent-config/copilot/frameworks/agentic-sdlc
