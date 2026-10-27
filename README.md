@@ -1,6 +1,6 @@
 # Agentic SDLC reference: TypeScript on Node.js
 
-A small Express service that shows every rule of the `typescript-node` stack of the [Agentic SDLC framework](https://github.com/conanjs/agent-config/tree/main/copilot/frameworks/agentic-sdlc) in working code: one feature, "revise a document without overwriting a newer change" (`PUT /documents/:id`, optimistic concurrency), through every layer, with unit and integration tests. It exists to be read and copied, not deployed.
+A small Express service that shows every rule of the `typescript-node` stack of the [Agentic SDLC framework](https://github.com/conanjs/agent-config/tree/main/copilot/frameworks/agentic-sdlc) in working code: one `documents` feature with its whole lifecycle (`POST /documents`, `GET /documents?cursor=&limit=`, `GET /documents/:id`, `PUT /documents/:id` with optimistic concurrency, `GET /documents/:id/versions`, `DELETE /documents/:id`), errors as RFC 9457 problems, through every layer, with unit and integration tests. This is the layer-first variant (layers at the top of `src/`, an opt-in, DR-002); `main` is feature-first. It exists to be read and copied, not deployed.
 
 ## What to read
 

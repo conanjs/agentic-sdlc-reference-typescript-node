@@ -2,12 +2,15 @@
 
 Domain terms and naming choices for this repo (NAM-2, NAM-3).
 
-| Term             | Meaning                                                                                    |
-| ---------------- | ------------------------------------------------------------------------------------------ |
-| Document         | A text with an id and a version; every accepted revision creates the next version.         |
-| Version          | Positive integer, 1 at creation, plus one per accepted revision.                           |
-| Revise           | Replace a document's body, based on the version the caller read.                           |
-| Version conflict | The caller's version is no longer the stored one: someone else revised the document first. |
+| Term             | Meaning                                                                                                                                                          |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Document         | A text with an id and a version; every accepted revision creates the next version.                                                                               |
+| Version          | Positive integer, 1 at creation, plus one per accepted revision.                                                                                                 |
+| Revise           | Replace a document's body, based on the version the caller read.                                                                                                 |
+| Version conflict | The caller's version is no longer the stored one: someone else revised the document first.                                                                       |
+| Problem          | An RFC 9457 error body (`application/problem+json`): `type`, `title`, `status`.                                                                                  |
+| History          | Every stored version of one document, oldest first (`GET /documents/:id/versions`).                                                                              |
+| Cursor           | Opaque marker in a list response (`nextCursor`); pass it back as `cursor` for the next page. Today it is the last id of the page; clients must not rely on that. |
 
 **Naming choices**
 
