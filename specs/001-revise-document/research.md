@@ -23,3 +23,14 @@ Decision records for the reference implementation (`decision-record/v2`).
 - **Confidence:** high
 - **Supersedes:** none
 - **Decided by:** engineering · **Approved at:** G1 (2026-10-25)
+
+## DR-002: Feature-first layout for api
+
+- **Tree path:** framework MOD-9 (feature-first is the default; layer-first only by a recorded opt-in)
+- **Criteria:** the reference must show the default layout; the layer-first example stays on branch `layout/layer-first` (`patterns/maintained-variant.pattern.md`).
+- **Options considered:** feature-first (`src/documents/`, `src/shared/`) | stay layer-first by opt-in
+- **Chosen:** feature-first, as a pure move: same files, same tests, new folders; `shared/` with its four layer folders from the start.
+- **Rejected:** stay layer-first — that is the opt-in case, already kept on `layout/layer-first`.
+- **Confidence:** high
+- **Supersedes:** none
+- **Decided by:** owner (V) · **Approved at:** 2026-10-27

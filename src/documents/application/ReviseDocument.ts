@@ -1,5 +1,5 @@
-import type { DocumentStore } from "@/application/ports/DocumentStore.js";
-import type { Result } from "@/domain/Result.js";
+import type { DocumentStore } from "@/documents/application/ports/DocumentStore.js";
+import type { Result } from "@/shared/domain/Result.js";
 
 /** Reasons a revision is refused; the interface layer maps each one to an HTTP status. */
 export type ReviseDocumentError = "not-found" | "version-conflict" | "invalid-body";

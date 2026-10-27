@@ -1,6 +1,6 @@
-import type { DocumentStore } from "@/application/ports/DocumentStore.js";
-import type { Document } from "@/domain/Document.js";
-import type { Result } from "@/domain/Result.js";
+import type { DocumentStore } from "@/documents/application/ports/DocumentStore.js";
+import type { Document } from "@/documents/domain/Document.js";
+import type { Result } from "@/shared/domain/Result.js";
 
 /** {@link DocumentStore} that keeps documents in process memory; everything is lost on restart. */
 export class InMemoryDocumentStore implements DocumentStore {

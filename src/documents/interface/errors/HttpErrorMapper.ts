@@ -1,6 +1,6 @@
 import type { ErrorRequestHandler } from "express";
 import type { Logger } from "pino";
-import type { ReviseDocumentError } from "@/application/ReviseDocument.js";
+import type { ReviseDocumentError } from "@/documents/application/ReviseDocument.js";
 
 /** The single place that turns failures into HTTP responses (TSN-11, EXP-5). */
 export class HttpErrorMapper {
