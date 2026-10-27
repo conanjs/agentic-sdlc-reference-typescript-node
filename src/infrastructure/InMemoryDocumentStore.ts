@@ -6,12 +6,18 @@ import type { Result } from "@/domain/Result.js";
 export class InMemoryDocumentStore implements DocumentStore {
   readonly #documents = new Map<string, Document>();
 
-  /** {@inheritDoc DocumentStore.find} */
+  /**
+   * {@link DocumentStore.find} against this process's memory: resolves at once and never rejects,
+   * so a caller here never sees a storage failure.
+   */
   public find(id: string): Promise<Document | undefined> {
     return Promise.resolve(this.#documents.get(id));
   }
 
-  /** {@inheritDoc DocumentStore.save} */
+  /**
+   * {@link DocumentStore.save} into this process's memory, atomic within this process only: two server
+   * instances would each keep their own copy and could both accept a revision of one version.
+   */
   public save(document: Document, replaces: number): Promise<Result<Document, "version-conflict">> {
     // No await between the check and the write, so no other save can run in between.
     const stored = this.#documents.get(document.id)?.version ?? 0;
