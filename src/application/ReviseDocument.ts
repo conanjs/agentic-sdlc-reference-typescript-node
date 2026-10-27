@@ -34,8 +34,10 @@ export class ReviseDocument {
   public constructor(private readonly documents: DocumentStore) {}
 
   /**
-   * Applies one revision.
+   * Replaces the document's body in the store, but only if nobody revised it since the caller read
+   * `expectedVersion`; otherwise changes nothing and returns why.
    *
+   * @param input - The revision, already validated at the HTTP boundary: the target document, the new body, and the version the caller read before editing.
    * @returns The stored new version as plain data, or the reason the revision was refused.
    */
   public async run(

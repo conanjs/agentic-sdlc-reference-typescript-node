@@ -19,8 +19,10 @@ export class HttpErrorMapper {
   public constructor(private readonly logger: Logger) {}
 
   /**
-   * Picks the status for a refused revision.
+   * Returns the HTTP status a client receives when a use case refuses a request, with no I/O and no
+   * logging: an expected refusal is a 4xx, never a 500.
    *
+   * @param error - The reason a use case refused the request.
    * @returns 404, 409 or 422.
    */
   public statusFor(error: ReviseDocumentError): number {

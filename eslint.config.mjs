@@ -5,6 +5,16 @@ import { createTypeScriptImportResolver } from "eslint-import-resolver-typescrip
 import importX from "eslint-plugin-import-x";
 import jsdoc from "eslint-plugin-jsdoc";
 import tsdoc from "eslint-plugin-tsdoc";
+import localDocs from "./eslint/specific-summary.mjs";
+
+// require-param / require-returns skip a doc comment that is only `{@inheritDoc Port.member}`: the inherited
+// contract already carries @param and @returns (CMT-12, TSN-13).
+const notInheriting = ["ArrowFunctionExpression", "FunctionDeclaration", "FunctionExpression"].map(
+  (context) => ({
+    context,
+    comment: 'JsdocBlock:not(:has(JsdocInlineTag[tag="inheritDoc"]))',
+  }),
+);
 import tseslint from "typescript-eslint";
 
 // IMP-1, TSN-16: a relative path may name only a file in the importing file's own folder.
@@ -117,10 +127,12 @@ export default tseslint.config(
     // TSN-13, CMT-5, CMT-12: TSDoc on every exported declaration and public member.
     files: ["src/**/*.ts", "test/support/**/*.ts"],
     ignores: ["src/**/*.test.ts"],
-    plugins: { jsdoc, tsdoc },
+    plugins: { jsdoc, tsdoc, "local-docs": localDocs },
     settings: { jsdoc: { mode: "typescript" } },
     rules: {
       "tsdoc/syntax": "error",
+      // CMT-13: a summary must add facts beyond the member and class names.
+      "local-docs/specific-summary": ["error", { minWords: 3 }],
       "jsdoc/require-jsdoc": [
         "error",
         {
@@ -141,6 +153,14 @@ export default tseslint.config(
         },
       ],
       "jsdoc/informative-docs": "error",
+      "jsdoc/require-param": ["error", { checkDestructured: false, contexts: notInheriting }],
+      "jsdoc/require-param-description": "error",
+      "jsdoc/check-param-names": "error",
+      "jsdoc/require-returns": [
+        "error",
+        { forceReturnsWithAsync: true, checkGetters: false, contexts: notInheriting },
+      ],
+      "jsdoc/require-returns-description": "error",
     },
   },
   prettier,
