@@ -156,6 +156,26 @@ export default tseslint.config(
     },
   },
   {
+    // TSN-19: HTTP status codes are a delivery detail, so the library is used only in interface/.
+    // Repeats noRelativeOutsideFolder: a later block's no-restricted-imports options replace earlier ones.
+    files: ["src/**/*.ts"],
+    ignores: ["src/*/interface/**", "src/**/*.test.ts"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [noRelativeOutsideFolder],
+          paths: [
+            {
+              name: "http-status-codes",
+              message: "Status codes belong to the interface ring; return a Result error (TSN-19)",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     // Tests sit outside the layer graph: a use-case test may use the in-memory adapter as its fake.
     files: ["src/**/*.ts"],
     ignores: ["src/**/*.test.ts"],
