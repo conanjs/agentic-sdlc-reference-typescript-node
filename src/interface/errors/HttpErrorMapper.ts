@@ -21,6 +21,7 @@ export class HttpErrorMapper {
   /**
    * Picks the status for a refused revision.
    *
+   * @param error - The reason a use case refused the request.
    * @returns 404, 409 or 422.
    */
   public statusFor(error: ReviseDocumentError): number {

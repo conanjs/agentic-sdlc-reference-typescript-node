@@ -94,9 +94,10 @@ layers:
 
 | Check                                                                                                                                     | Last run   | Result |
 | ----------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------ |
-| `pnpm run check` (format, lint, typecheck, unit, integration, build, smoke)                                                               | 2026-10-26 | pass   |
+| `pnpm run check` (format, lint, typecheck, unit, integration, build, smoke)                                                               | 2026-10-27 | pass   |
 | Lint catches seeded violations (relative path, cycle, layer zone, adapter import, R1, R7, missing doc, `@remarks` beside `{@inheritDoc}`) | 2026-10-26 | pass   |
-| `validate-project.mjs`                                                                                                                    | 2026-10-26 | pass   |
+| Lint catches seeded violations (missing `@param`, misnamed `@param`; `{@inheritDoc}` alone stays exempt)                                  | 2026-10-27 | pass   |
+| `validate-project.mjs`                                                                                                                    | 2026-10-27 | pass   |
 
 ## 10. Known gaps / out of scope
 

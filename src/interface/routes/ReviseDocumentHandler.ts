@@ -19,6 +19,8 @@ export class ReviseDocumentHandler {
   /**
    * Answers one request; Express 5 forwards a rejected promise to the error middleware (EXP-6).
    *
+   * @param req - `PUT /documents/:id`: `id` comes from the path; the JSON body is validated here.
+   * @param res - Receives the revised document, or the status `HttpErrorMapper` picks for a refusal.
    * @returns Resolves once the response is sent.
    */
   public async handle(req: Request<{ id: string }>, res: Response): Promise<void> {

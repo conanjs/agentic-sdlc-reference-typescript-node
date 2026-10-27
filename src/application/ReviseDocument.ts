@@ -36,6 +36,7 @@ export class ReviseDocument {
   /**
    * Applies one revision.
    *
+   * @param input - The revision, already validated at the HTTP boundary: the target document, the new body, and the version the caller read before editing.
    * @returns The stored new version as plain data, or the reason the revision was refused.
    */
   public async run(

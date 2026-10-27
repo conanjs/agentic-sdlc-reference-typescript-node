@@ -5,6 +5,15 @@ import { createTypeScriptImportResolver } from "eslint-import-resolver-typescrip
 import importX from "eslint-plugin-import-x";
 import jsdoc from "eslint-plugin-jsdoc";
 import tsdoc from "eslint-plugin-tsdoc";
+
+// require-param / require-returns skip a doc comment that is only `{@inheritDoc Port.member}`: the inherited
+// contract already carries @param and @returns (CMT-12, TSN-13).
+const notInheriting = ["ArrowFunctionExpression", "FunctionDeclaration", "FunctionExpression"].map(
+  (context) => ({
+    context,
+    comment: 'JsdocBlock:not(:has(JsdocInlineTag[tag="inheritDoc"]))',
+  }),
+);
 import tseslint from "typescript-eslint";
 
 // IMP-1, TSN-16: a relative path may name only a file in the importing file's own folder.
@@ -141,6 +150,14 @@ export default tseslint.config(
         },
       ],
       "jsdoc/informative-docs": "error",
+      "jsdoc/require-param": ["error", { checkDestructured: false, contexts: notInheriting }],
+      "jsdoc/require-param-description": "error",
+      "jsdoc/check-param-names": "error",
+      "jsdoc/require-returns": [
+        "error",
+        { forceReturnsWithAsync: true, checkGetters: false, contexts: notInheriting },
+      ],
+      "jsdoc/require-returns-description": "error",
     },
   },
   prettier,
