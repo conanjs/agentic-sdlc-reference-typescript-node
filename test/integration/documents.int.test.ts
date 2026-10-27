@@ -27,8 +27,14 @@ function put(id: string, body: unknown): Promise<Response> {
   return fetch(`${baseUrl}/documents/${id}`, {
     method: "PUT",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify(body),
+    body: typeof body === "string" ? body : JSON.stringify(body),
   });
+}
+
+async function expectProblem(response: Response, status: number, type: string, title: string) {
+  expect(response.status).toBe(status);
+  expect(response.headers.get("content-type")).toMatch(/^application\/problem\+json/);
+  expect(await response.json()).toEqual({ type, title, status });
 }
 
 describe("PUT /documents/:id", () => {
@@ -46,13 +52,13 @@ describe("PUT /documents/:id", () => {
   it("answers 409 for a stale version", async () => {
     const response = await put("d1", { body: "late", expectedVersion: 1 });
 
-    expect(response.status).toBe(409);
+    await expectProblem(response, 409, "/problems/version-conflict", "Conflict");
   });
 
   it("answers 404 for an unknown document", async () => {
     const response = await put("nope", { body: "x", expectedVersion: 1 });
 
-    expect(response.status).toBe(404);
+    await expectProblem(response, 404, "/problems/not-found", "Not Found");
   });
 
   it("answers 400 for a body with unknown keys", async () => {
@@ -62,6 +68,12 @@ describe("PUT /documents/:id", () => {
       extra: true,
     });
 
-    expect(response.status).toBe(400);
+    await expectProblem(response, 400, "/problems/invalid-request", "Bad Request");
+  });
+
+  it("answers an about:blank 400 for malformed JSON", async () => {
+    const response = await put("d1", "{not json");
+
+    await expectProblem(response, 400, "about:blank", "Bad Request");
   });
 });
