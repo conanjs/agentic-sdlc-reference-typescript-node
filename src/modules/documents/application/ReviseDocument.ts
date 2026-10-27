@@ -1,4 +1,5 @@
 import type { DocumentStore } from "@/modules/documents/application/ports/DocumentStore.js";
+import type { DocumentView } from "@/modules/documents/application/DocumentView.js";
 import type { Result } from "@/modules/shared/domain/Result.js";
 
 /** Reasons a revision is refused; the interface layer maps each one to an HTTP status. */
@@ -14,15 +15,8 @@ export interface ReviseDocumentInput {
   readonly expectedVersion: number;
 }
 
-/** Output of {@link ReviseDocument.run}: plain data, so the `Document` entity never leaves the use case. */
-export interface ReviseDocumentOutput {
-  /** Identifier of the revised document. */
-  readonly id: string;
-  /** Text now stored. */
-  readonly body: string;
-  /** Version number after the revision. */
-  readonly version: number;
-}
+/** Output of {@link ReviseDocument.run}: the new version as plain data, so the entity never leaves the use case. */
+export type ReviseDocumentOutput = DocumentView;
 
 /** Use case: replace a document's body without overwriting a newer change by someone else. */
 export class ReviseDocument {

@@ -4,7 +4,7 @@
 
 1. **The reference teaches the rules.** Every file follows the framework's foundations, the `typescript-node` stack idioms and the `class-modeled@1` paradigm overlay; a choice that differs from them is recorded below, never silent.
 2. **Checks are the definition of done.** `pnpm run check` and the framework's `validate-project.mjs` pass on every commit to `main`.
-3. **Small and complete.** One feature through every layer; no feature is added unless it shows a rule the existing code cannot.
+3. **Small and complete.** One module through every layer; no feature is added unless it shows a rule or contract the existing code cannot (each spec's research records which).
 
 ## Governance
 
