@@ -77,3 +77,54 @@ describe("PUT /documents/:id", () => {
     await expectProblem(response, 400, "about:blank", "Bad Request");
   });
 });
+
+describe("document lifecycle", () => {
+  async function send(method: string, path: string, body?: unknown): Promise<Response> {
+    return fetch(`${baseUrl}${path}`, {
+      method,
+      headers: { "content-type": "application/json" },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+  }
+
+  it("creates, reads, lists, revises, shows history and deletes a document", async () => {
+    const created = await send("POST", "/documents", { body: "draft" });
+    expect(created.status).toBe(201);
+    const { id } = (await created.json()) as { id: string };
+    expect(created.headers.get("location")).toBe(`/documents/${id}`);
+
+    const read = await send("GET", `/documents/${id}`);
+    expect(await read.json()).toEqual({ id, body: "draft", version: 1 });
+
+    const listed = (await (await send("GET", "/documents?limit=100")).json()) as {
+      items: { id: string }[];
+    };
+    expect(listed.items.map((d) => d.id)).toContain(id);
+
+    expect(
+      (await send("PUT", `/documents/${id}`, { body: "final", expectedVersion: 1 })).status,
+    ).toBe(200);
+    const history = await send("GET", `/documents/${id}/versions`);
+    expect(await history.json()).toEqual({
+      id,
+      versions: [
+        { version: 1, body: "draft" },
+        { version: 2, body: "final" },
+      ],
+    });
+
+    expect((await send("DELETE", `/documents/${id}`)).status).toBe(204);
+    await expectProblem(
+      await send("GET", `/documents/${id}`),
+      404,
+      "/problems/not-found",
+      "Not Found",
+    );
+  });
+
+  it("answers a 400 problem for a limit outside 1 to 100", async () => {
+    const response = await send("GET", "/documents?limit=500");
+
+    await expectProblem(response, 400, "/problems/invalid-request", "Bad Request");
+  });
+});

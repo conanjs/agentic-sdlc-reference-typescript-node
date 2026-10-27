@@ -8,7 +8,7 @@ updated-by: specs/001-revise-document
 
 ## 1. Overview
 
-The reference implementation of the `typescript-node` stack: one small HTTP service that lets a caller revise a document without overwriting a newer change by someone else (optimistic concurrency). It exists to show every stack choice in working code, not to be deployed. Risk tier: LOW.
+The reference implementation of the `typescript-node` stack: one small HTTP service for text documents: create, read, list page by page, revise without overwriting a newer change by someone else (optimistic concurrency), read the version history, and delete. It exists to show every stack choice in working code, not to be deployed. Risk tier: LOW.
 
 ## 2. System context
 
@@ -65,9 +65,9 @@ layers:
 
 ## 5. Data
 
-| Store         | Kind                    | Owned entities | Notes                                                                              |
-| ------------- | ----------------------- | -------------- | ---------------------------------------------------------------------------------- |
-| In-memory map | `InMemoryDocumentStore` | `Document`     | Lost on restart. The version check and the write run with no `await` between them. |
+| Store         | Kind                    | Owned entities | Notes                                                                                                                                                 |
+| ------------- | ----------------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| In-memory map | `InMemoryDocumentStore` | `Document`     | Every version of each document, oldest first; the last is current. Lost on restart. The version check and the write run with no `await` between them. |
 
 ## 6. External dependencies
 
@@ -85,12 +85,14 @@ layers:
 
 ## 8. Key decisions
 
-| Id      | Topic                                   | Where                                 |
-| ------- | --------------------------------------- | ------------------------------------- |
-| DR-001  | Toolchain and alias mechanism for `api` | specs/001-revise-document/research.md |
-| PDM-api | Paradigm for `api`                      | specs/001-revise-document/research.md |
-| DR-002  | Layer-first layout (opt-in)             | specs/001-revise-document/research.md |
-| DR-003  | HTTP status-code source                 | specs/001-revise-document/research.md |
+| Id      | Topic                                   | Where                                    |
+| ------- | --------------------------------------- | ---------------------------------------- |
+| DR-001  | Toolchain and alias mechanism for `api` | specs/001-revise-document/research.md    |
+| PDM-api | Paradigm for `api`                      | specs/001-revise-document/research.md    |
+| DR-002  | Layer-first layout (opt-in)             | specs/001-revise-document/research.md    |
+| DR-003  | HTTP status-code source                 | specs/001-revise-document/research.md    |
+| DR-005  | Cursor pagination for document lists    | specs/002-document-lifecycle/research.md |
+| DR-006  | Server-assigned document ids            | specs/002-document-lifecycle/research.md |
 
 ## 9. Verification status
 
@@ -104,9 +106,10 @@ layers:
 | Lint catches seeded re-exports (`export { X } from`, `export * from`; TSN-18)                                                                                                                                                                        | 2026-10-27 | pass   |
 | Error bodies are RFC 9457 problems: integration tests assert status, `application/problem+json` and the body for 400 (validation and malformed JSON), 404 and 409                                                                                    | 2026-10-28 | pass   |
 | Lint catches a seeded `http-status-codes` import in `src/application/` (TSN-19)                                                                                                                                                                      | 2026-10-28 | pass   |
+| Document lifecycle (spec 002): unit tests for each new use case, and an integration test that creates (201 + `Location`), reads, lists, revises, reads the history, deletes (204), then gets a 404 problem; a 400 problem for `limit=500`            | 2026-10-28 | pass   |
 | `validate-project.mjs`                                                                                                                                                                                                                               | 2026-10-27 | pass   |
 
 ## 10. Known gaps / out of scope
 
-- No persistent store, authentication, or create/read endpoints: the reference shows one write path through every layer, nothing more.
+- No persistent store (a SQLite adapter behind the same port is planned), no authentication, no HTTP conditional requests yet (`ETag`/`If-Match` is the next step).
 - CI (`.github/workflows/check.yml`) runs `pnpm run check`, `pnpm audit` and the framework validator; run `pnpm run check` locally before pushing.
