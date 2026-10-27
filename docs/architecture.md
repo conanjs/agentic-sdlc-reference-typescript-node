@@ -97,9 +97,10 @@ layers:
 | `pnpm run check` (format, lint, typecheck, unit, integration, build, smoke)                                                               | 2026-10-27 | pass   |
 | Lint catches seeded violations (relative path, cycle, layer zone, adapter import, R1, R7, missing doc, `@remarks` beside `{@inheritDoc}`) | 2026-10-26 | pass   |
 | Lint catches seeded violations (missing `@param`, misnamed `@param`; `{@inheritDoc}` alone stays exempt)                                  | 2026-10-27 | pass   |
+| Lint catches a seeded vague summary (`Applies one revision.` on `ReviseDocument.run`, CMT-13); it inspects all 15 method summaries        | 2026-10-27 | pass   |
 | `validate-project.mjs`                                                                                                                    | 2026-10-27 | pass   |
 
 ## 10. Known gaps / out of scope
 
 - No persistent store, authentication, or create/read endpoints: the reference shows one write path through every layer, nothing more.
-- No CI workflow in this folder; run `pnpm run check` locally.
+- CI (`.github/workflows/check.yml`) runs `pnpm run check`, `pnpm audit` and the framework validator; run `pnpm run check` locally before pushing.

@@ -17,7 +17,9 @@ export class ReviseDocumentHandler {
   ) {}
 
   /**
-   * Answers one request; Express 5 forwards a rejected promise to the error middleware (EXP-6).
+   * Turns one `PUT /documents/:id` into a {@link ReviseDocument} call and writes 200 with the new
+   * version, 400 for a malformed body, or the refusal's mapped status. Express 5 forwards a rejected
+   * promise to the error middleware (EXP-6).
    *
    * @param req - `PUT /documents/:id`: `id` comes from the path; the JSON body is validated here.
    * @param res - Receives the revised document, or the status `HttpErrorMapper` picks for a refusal.
