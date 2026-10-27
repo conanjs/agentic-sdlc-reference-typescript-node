@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
-import type { ReviseDocument } from "@/application/ReviseDocument.js";
-import type { HttpErrorMapper } from "@/interface/errors/HttpErrorMapper.js";
+import type { ReviseDocument } from "@/documents/application/ReviseDocument.js";
+import type { HttpErrorMapper } from "@/documents/interface/errors/HttpErrorMapper.js";
 import { ReviseDocumentBody } from "./ReviseDocumentBody.js";
 
 /** Handles `PUT /documents/:id`: parses input, calls one use case and maps the result (EXP-1). */

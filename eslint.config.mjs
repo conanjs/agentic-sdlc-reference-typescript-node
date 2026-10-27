@@ -1,4 +1,5 @@
 // @ts-check
+import { readdirSync } from "node:fs";
 import js from "@eslint/js";
 import prettier from "eslint-config-prettier";
 import { createTypeScriptImportResolver } from "eslint-import-resolver-typescript";
@@ -30,7 +31,7 @@ const noRelativeOutsideFolder = {
 };
 
 // PDM-class-modeled-R7: free functions only in the Tier B files listed in docs/architecture.md §7.
-const tierB = ["src/main.ts", "src/infrastructure/config.ts"];
+const tierB = ["src/main.ts", "src/shared/infrastructure/config.ts"];
 // TSN-18: no barrel files. A file never re-exports; import the file that declares the symbol.
 const noReExports = [
   {
@@ -70,23 +71,54 @@ const domainState = [
   },
 ];
 
-// FF-1, TSN-17: layer direction from docs/architecture.md §4. Adapters are reachable only from the
-// composition root (PDM-class-modeled-R9). Zones are resolved paths, so aliases cannot bypass them.
+// Feature modules (MOD-9): every folder under src/ except shared/. docs/architecture.md §4 lists the same set.
+const modules = readdirSync("src", { withFileTypes: true })
+  .filter((d) => d.isDirectory() && d.name !== "shared")
+  .map((d) => d.name);
+
+// FF-1, TSN-17: layer direction from docs/architecture.md §4, inside every module and shared/. A glob zone is
+// matched against the full file path, so each one ends in /** (a bare folder glob matches no file). Adapters are
+// reachable only from the composition root (PDM-class-modeled-R9). Zones are resolved paths, so aliases
+// cannot bypass them.
 const layerZones = [
   {
-    target: "./src/domain",
-    from: ["./src/application", "./src/infrastructure", "./src/interface"],
+    target: "./src/*/domain/**",
+    from: ["./src/*/application/**", "./src/*/infrastructure/**", "./src/*/interface/**"],
   },
+  { target: "./src/*/application/**", from: ["./src/*/infrastructure/**", "./src/*/interface/**"] },
+  { target: "./src/*/infrastructure/**", from: ["./src/*/interface/**"] },
+  { target: "./src/*/interface/**", from: ["./src/*/infrastructure/**"] },
   {
-    target: "./src/application",
-    from: ["./src/infrastructure", "./src/interface"],
-  },
-  { target: "./src/infrastructure", from: ["./src/interface"] },
-  { target: "./src/interface", from: ["./src/infrastructure"] },
-  {
-    target: "./src/!(CompositionRoot|main).ts",
+    target: ["./src/!(CompositionRoot|main).ts", "./src/*/**"],
     from: ["./src/CompositionRoot.ts", "./src/main.ts"],
   },
+];
+
+// MOD-3, IMP-5, TSN-17: a module reaches another only through its public surface, the use cases and their
+// input/output types in application/ (not ports/); shared/ uses no module (MOD-4).
+const moduleZones = [
+  ...modules.flatMap((target) =>
+    modules
+      .filter((from) => from !== target)
+      .flatMap((from) => [
+        {
+          target: `./src/${target}`,
+          from: `./src/${from}`,
+          except: ["./application"],
+          message: `${target} may import only ${from}/application (MOD-3)`,
+        },
+        {
+          target: `./src/${target}`,
+          from: `./src/${from}/application/ports`,
+          message: `Ports of ${from} are not public (MOD-3)`,
+        },
+      ]),
+  ),
+  ...modules.map((from) => ({
+    target: "./src/shared",
+    from: `./src/${from}`,
+    message: "shared/ imports no feature module (MOD-4)",
+  })),
 ];
 
 export default tseslint.config(
@@ -127,7 +159,9 @@ export default tseslint.config(
     // Tests sit outside the layer graph: a use-case test may use the in-memory adapter as its fake.
     files: ["src/**/*.ts"],
     ignores: ["src/**/*.test.ts"],
-    rules: { "import-x/no-restricted-paths": ["error", { zones: layerZones }] },
+    rules: {
+      "import-x/no-restricted-paths": ["error", { zones: [...layerZones, ...moduleZones] }],
+    },
   },
   {
     files: ["src/**/*.ts"],
@@ -140,7 +174,7 @@ export default tseslint.config(
     rules: { "no-restricted-syntax": ["error", ...noReExports] },
   },
   {
-    files: ["src/domain/**/*.ts"],
+    files: ["src/*/domain/**/*.ts"],
     ignores: ["src/**/*.test.ts"],
     rules: {
       "no-restricted-syntax": ["error", ...noFreeFunctions, ...noReExports, ...domainState],

@@ -12,7 +12,7 @@ on:
         description: agent-config commit or branch to validate against
         required: false
 env:
-  FRAMEWORK_REF: ${{ inputs.framework-ref || '85068c3b119cb06e7553c47239c981e653d4dfef' }}
+  FRAMEWORK_REF: ${{ inputs.framework-ref || '3eb5c6c26683d5ea19f47290b2fddf82567d3348' }}
 jobs:
   check:
     runs-on: ubuntu-latest

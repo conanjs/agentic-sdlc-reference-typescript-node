@@ -1,4 +1,4 @@
-import type { Result } from "./Result.js";
+import type { Result } from "@/shared/domain/Result.js";
 
 /**
  * A text document whose every change creates a new version, so a write based on a stale read can be refused.

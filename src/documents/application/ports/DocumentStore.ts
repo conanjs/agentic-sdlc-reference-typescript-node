@@ -1,5 +1,5 @@
-import type { Document } from "@/domain/Document.js";
-import type { Result } from "@/domain/Result.js";
+import type { Document } from "@/documents/domain/Document.js";
+import type { Result } from "@/shared/domain/Result.js";
 
 /**
  * Keeps the current version of each document; the only way the use cases reach storage.
