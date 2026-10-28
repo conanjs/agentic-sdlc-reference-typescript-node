@@ -15,3 +15,5 @@ The task plan for the comments module, the health route and request ids, in the 
       touches: none · refs: none · procedure: none · hot-path: no
 - [x] T206 [US1] Enforce module edges in lint with a mayDependOn map (eslint.config.mjs) [Eng] [llm]
       touches: none · refs: none · procedure: none · hot-path: no
+- [x] T207 [US2] Answer requests no route serves with an about:blank 404 problem, and log requests the client aborts (src/modules/shared/interface/) [Eng] [llm]
+      touches: none · refs: none · procedure: none · hot-path: no

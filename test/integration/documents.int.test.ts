@@ -1,30 +1,24 @@
-import type { AddressInfo } from "node:net";
-import type { Server } from "node:http";
 import { pino } from "pino";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { CompositionRoot } from "@/CompositionRoot.js";
 import { Document } from "@/modules/documents/domain/document/Document.js";
 import { InMemoryDocumentStore } from "@/modules/documents/infrastructure/InMemoryDocumentStore.js";
-import { expectProblem } from "@/test/support/http.js";
+import { expectProblem, startApp, type RunningApp } from "@/test/support/http.js";
 import { valueOf } from "@/test/support/results.js";
 
 // Contract test: problem types are written out literally, never taken from the code's reason objects,
 // so a changed wire value fails here instead of reaching clients unnoticed (TSN-20).
-let server: Server;
+let app: RunningApp;
 let baseUrl: string;
 
 beforeAll(async () => {
   const store = new InMemoryDocumentStore();
   valueOf(await store.save(valueOf(Document.create("d1", "draft")), 0));
-  const app = new CompositionRoot(pino({ level: "silent" }), store).app();
-  server = app.listen(0);
-  await new Promise<void>((resolve) => server.once("listening", resolve));
-  baseUrl = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+  app = await startApp(new CompositionRoot(pino({ level: "silent" }), store));
+  baseUrl = app.baseUrl;
 });
 
-afterAll(async () => {
-  await new Promise<void>((resolve) => server.close(() => resolve()));
-});
+afterAll(() => app.close());
 
 function put(id: string, body: unknown): Promise<Response> {
   return fetch(`${baseUrl}/documents/${id}`, {

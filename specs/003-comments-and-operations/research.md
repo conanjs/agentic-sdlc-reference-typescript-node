@@ -29,7 +29,7 @@ Decision records for the comments module, the health route and request ids (`dec
 - **Tree path:** framework EXP-3 (correlation id in middleware), TSN-10 (structured logs)
 - **Criteria:** one id per request, in the response and in every log line about it; a caller (gateway, other service) may already have one; a client must not be able to inject text into the logs.
 - **Options considered:** keep an incoming `X-Request-Id` that is 1–128 of `[A-Za-z0-9_.-]`, else make a UUID | always make a new id | trust any incoming value
-- **Chosen:** keep a plain incoming id, else a UUID from `IdSource`; echo it in `X-Request-Id`; log `request.completed` with id, method, path without query string, status and duration; `request.failed` carries the same id.
+- **Chosen:** keep a plain incoming id, else a UUID from `IdSource`; echo it in `X-Request-Id`; log `request.completed` with id, method, path without query string, status and duration, or `request.aborted` when the client disconnects before the response is sent; `request.failed` carries the same id.
 - **Rejected:** always new — breaks the trace a gateway started; trust any value — newlines or very long values would reach the logs.
 - **Confidence:** high
 - **Supersedes:** none

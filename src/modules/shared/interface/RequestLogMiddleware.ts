@@ -4,8 +4,9 @@ import type { Logger } from "pino";
 import type { IdSource } from "@/modules/shared/application/ports/IdSource.js";
 
 /**
- * Gives every request an id, returns it in a response header, and logs one structured line when the
- * response is sent, for every module (EXP-3, TSN-10).
+ * Gives every request an id, returns it in a response header, and logs one structured line per
+ * request, for every module (EXP-3, TSN-10): `request.completed` when the response was sent, or
+ * `request.aborted` when the connection closed first.
  */
 export class RequestLogMiddleware {
   /** Request and response header that carries the request id. */
@@ -17,7 +18,7 @@ export class RequestLogMiddleware {
   /**
    * Binds the middleware to the logger it writes to and the source of new request ids.
    *
-   * @param logger - Receives one `request.completed` event per response.
+   * @param logger - Receives one `request.completed` or `request.aborted` event per request.
    * @param ids - Makes an id for a request that did not bring a usable one.
    */
   public constructor(
@@ -30,7 +31,7 @@ export class RequestLogMiddleware {
    * rejected for malformed JSON gets an id and a log line.
    *
    * @returns Middleware that keeps a plain incoming `X-Request-Id` or makes a new one, echoes it on the
-   *   response, and logs `requestId`, method, path, status and duration when the response finishes.
+   *   response, and logs `requestId`, method, path and duration, plus the status once it was sent.
    */
   public handler(): RequestHandler {
     return (req, res, next) => {
@@ -41,18 +42,21 @@ export class RequestLogMiddleware {
           ? incoming
           : this.ids.next();
       res.setHeader(RequestLogMiddleware.HEADER, requestId);
+      // The path leaves out the query string, so cursors and filters stay out of the logs.
+      const fields = () => ({
+        requestId,
+        method: req.method,
+        path: req.path,
+        durationMs: Math.round(performance.now() - started),
+      });
+      let sent = false;
       res.on("finish", () => {
-        // The path leaves out the query string, so cursors and filters stay out of the logs.
-        this.logger.info(
-          {
-            requestId,
-            method: req.method,
-            path: req.path,
-            status: res.statusCode,
-            durationMs: Math.round(performance.now() - started),
-          },
-          "request.completed",
-        );
+        sent = true;
+        this.logger.info({ ...fields(), status: res.statusCode }, "request.completed");
+      });
+      // "close" also fires when the client goes away first; "finish" then never does.
+      res.on("close", () => {
+        if (!sent) this.logger.warn(fields(), "request.aborted");
       });
       next();
     };

@@ -28,6 +28,7 @@ import type { IdSource } from "@/modules/shared/application/ports/IdSource.js";
 import { UuidIdSource } from "@/modules/shared/infrastructure/UuidIdSource.js";
 import { ErrorMiddleware } from "@/modules/shared/interface/ErrorMiddleware.js";
 import { HealthHandler } from "@/modules/shared/interface/HealthHandler.js";
+import { NotFoundHandler } from "@/modules/shared/interface/NotFoundHandler.js";
 import { RequestLogMiddleware } from "@/modules/shared/interface/RequestLogMiddleware.js";
 
 /**
@@ -86,6 +87,7 @@ export class CompositionRoot {
       commentErrors,
     );
     const health = new HealthHandler();
+    const notFound = new NotFoundHandler();
 
     // 3. Middleware first: the request log wraps everything, including body-parser rejections.
     const app = express();
@@ -105,7 +107,8 @@ export class CompositionRoot {
     app.get("/documents/:id/comments", (req, res) => listComments.handle(req, res));
     app.get("/documents/:id/comments/:commentId", (req, res) => getComment.handle(req, res));
 
-    // 5. Errors last, so it sees what every route and middleware throws.
+    // 5. Whatever no route served, then errors last, so it sees what everything above throws.
+    app.use((req, res) => notFound.handle(req, res));
     app.use(new ErrorMiddleware(this.logger).handler());
     return app;
   }
