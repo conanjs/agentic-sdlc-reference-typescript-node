@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { valueOf } from "@/test/support/results.js";
 import { Document } from "./Document.js";
+import { DocumentError } from "./DocumentError.js";
 
 describe("Document", () => {
   it("starts at version 1", () => {
@@ -23,7 +24,7 @@ describe("Document", () => {
 
     expect(document.revise("final", 7)).toEqual({
       ok: false,
-      error: "version-conflict",
+      error: DocumentError.VersionConflict,
     });
   });
 
@@ -32,7 +33,7 @@ describe("Document", () => {
 
     expect(Document.create("d1", tooLong)).toEqual({
       ok: false,
-      error: "invalid-body",
+      error: DocumentError.InvalidBody,
     });
   });
 });

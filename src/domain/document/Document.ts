@@ -1,4 +1,5 @@
-import type { Result } from "./Result.js";
+import type { Result } from "@/domain/Result.js";
+import { DocumentError } from "./DocumentError.js";
 
 /**
  * A text document whose every change creates a new version, so a write based on a stale read can be refused.
@@ -25,10 +26,14 @@ export class Document {
    *
    * @param id - Caller-chosen identifier; never changes.
    * @param body - Initial text, at most {@link Document.MAX_BODY_LENGTH} characters.
-   * @returns The new document, or `invalid-body` when `body` is too long.
+   * @returns The new document, or {@link DocumentError.InvalidBody} when `body` is too long.
    */
-  public static create(id: string, body: string): Result<Document, "invalid-body"> {
-    if (body.length > Document.MAX_BODY_LENGTH) return { ok: false, error: "invalid-body" };
+  public static create(
+    id: string,
+    body: string,
+  ): Result<Document, typeof DocumentError.InvalidBody> {
+    if (body.length > Document.MAX_BODY_LENGTH)
+      return { ok: false, error: DocumentError.InvalidBody };
     return { ok: true, value: new Document(id, body, 1) };
   }
 
@@ -52,15 +57,14 @@ export class Document {
    *
    * @param body - New text, at most {@link Document.MAX_BODY_LENGTH} characters.
    * @param expectedVersion - Version the caller read before editing.
-   * @returns The next version; `version-conflict` when `expectedVersion` is not this version;
-   * `invalid-body` when `body` is too long.
+   * @returns The next version; {@link DocumentError.VersionConflict} when `expectedVersion` is not this version;
+   * {@link DocumentError.InvalidBody} when `body` is too long.
    */
-  public revise(
-    body: string,
-    expectedVersion: number,
-  ): Result<Document, "version-conflict" | "invalid-body"> {
-    if (expectedVersion !== this.#version) return { ok: false, error: "version-conflict" };
-    if (body.length > Document.MAX_BODY_LENGTH) return { ok: false, error: "invalid-body" };
+  public revise(body: string, expectedVersion: number): Result<Document, DocumentError> {
+    if (expectedVersion !== this.#version)
+      return { ok: false, error: DocumentError.VersionConflict };
+    if (body.length > Document.MAX_BODY_LENGTH)
+      return { ok: false, error: DocumentError.InvalidBody };
     return { ok: true, value: new Document(this.#id, body, this.#version + 1) };
   }
 }

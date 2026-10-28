@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { ListDocumentsQuery } from "./ListDocumentsQuery.js";
-import type { ListDocuments } from "@/application/ListDocuments.js";
-import type { HttpErrorMapper } from "@/interface/errors/HttpErrorMapper.js";
+import type { ListDocuments } from "@/application/list-documents/ListDocuments.js";
+import { DocumentsRefusal, type HttpErrorMapper } from "@/interface/errors/HttpErrorMapper.js";
 
 /** Handles `GET /documents`: parses input, calls one use case and maps the result (EXP-1). */
 export class ListDocumentsHandler {
@@ -27,7 +27,7 @@ export class ListDocumentsHandler {
   public async handle(req: Request, res: Response): Promise<void> {
     const parsed = ListDocumentsQuery.safeParse(req.query);
     if (!parsed.success) {
-      this.errors.problemFor("invalid-request").send(res);
+      this.errors.problemFor(DocumentsRefusal.InvalidRequest).send(res);
       return;
     }
 

@@ -1,7 +1,7 @@
 ---
 schema: repo-architecture/v2
-last-updated: 2026-10-26
-updated-by: specs/001-revise-document
+last-updated: 2026-10-28
+updated-by: v1.5.0 (MOD-10, TSN-20)
 ---
 
 # Architecture: typescript-node reference
@@ -51,6 +51,8 @@ layers:
     }
 ```
 
+- Inside each layer (MOD-10): `application/` and `interface/routes/` hold one kebab-case folder per use case (`application/revise-document/ReviseDocument.ts` and its test, `interface/routes/revise-document/{ReviseDocumentHandler, ReviseDocumentBody}.ts`), and `domain/` one folder per aggregate (`domain/document/Document.ts`, `DocumentError.ts`). Depth shows scope: a file in a use-case or aggregate folder serves only that one; a file at a layer root (`domain/Result.ts`, `application/DocumentView.ts`, `application/LookupError.ts`, `application/ports/`, `interface/errors/`) is shared.
+
 - Direction: `interface -> application -> domain`, and `infrastructure -> application, domain` (adapters implement ports declared in `application/ports/`). No other edges, no cycles.
 - Ports, by role:
   - **Input port:** the public `run()` of each use case. There is no separate interface; the controller depends on the use-case class.
@@ -80,6 +82,7 @@ layers:
 - **Config:** `src/infrastructure/config.ts` validates `PORT` and `LOG_LEVEL` once at startup and freezes the result (TSN-9).
 - **Logging:** one pino logger created in `main.ts` and injected; `no-console` in lint (TSN-10).
 - **Errors:** expected failures are `Result` values. `HttpErrorMapper` turns refusals into RFC 9457 problems (`application/problem+json`, `type` `/problems/<reason>`), and `src/interface/ErrorMiddleware.ts` turns thrown errors into `about:blank` problems, logging every 500 (TSN-11, EXP-5, EXP-8). Status constants come from `http-status-codes`, imported only under `src/interface/` (TSN-19, DR-003).
+- **Reasons:** every refusal reason is an `as const` object with a derived type of the same name, written once in the layer that owns it: `DocumentError` (`domain/document/`), `LookupError` (`application/`) and `DocumentsRefusal` (`interface/errors/`, which spreads both and adds `InvalidRequest`). Code names a reason by its key; the HTTP contract test writes the problem types out literally, so a changed value fails there (TSN-20). No `enum` anywhere; lint's `noEnums` selector rejects one.
 - **Input validation:** zod schema `ReviseDocumentBody` at the HTTP boundary, strict (EXP-7).
 - Tier B files: `src/main.ts` (process entry point), `src/infrastructure/config.ts` (config declaration). Everything else is Tier A (classes); lint enforces the list (PDM-class-modeled-R7).
 
@@ -107,6 +110,9 @@ layers:
 | Error bodies are RFC 9457 problems: integration tests assert status, `application/problem+json` and the body for 400 (validation and malformed JSON), 404 and 409                                                                                    | 2026-10-28 | pass   |
 | Lint catches a seeded `http-status-codes` import in `src/application/` (TSN-19)                                                                                                                                                                      | 2026-10-28 | pass   |
 | Document lifecycle (spec 002): unit tests for each new use case, and an integration test that creates (201 + `Location`), reads, lists, revises, reads the history, deletes (204), then gets a 404 problem; a 400 problem for `limit=500`            | 2026-10-28 | pass   |
+| Pure move to one folder per use case and per aggregate (MOD-10): `pnpm run check` passes with the same 16 unit and 7 integration tests; `DocumentQueries.test.ts` split into one test per use case, same 5 cases                                     | 2026-10-28 | pass   |
+| Reasons as `as const` objects (TSN-20): each value is written once in `src/`; the contract test gains a 422 case                                                                                                                                     | 2026-10-28 | pass   |
+| Lint catches a seeded `enum` (TSN-20, `noEnums`) in a use case, a domain file, `domain/Result.ts`, a Tier B file (`main.ts`), a unit test and `test/support/`                                                                                        | 2026-10-28 | pass   |
 | `validate-project.mjs`                                                                                                                                                                                                                               | 2026-10-27 | pass   |
 
 ## 10. Known gaps / out of scope

@@ -1,5 +1,6 @@
 import type { DocumentStore } from "@/application/ports/DocumentStore.js";
 import type { Result } from "@/domain/Result.js";
+import { LookupError } from "@/application/LookupError.js";
 
 /** Input of {@link DeleteDocument.run}, already validated at the HTTP boundary. */
 export interface DeleteDocumentInput {
@@ -20,10 +21,10 @@ export class DeleteDocument {
    * Removes the document and its whole history from the store; nothing can restore it.
    *
    * @param input - The document's identifier, given at creation.
-   * @returns Success with no value, or `not-found` when no document has this id.
+   * @returns Success with no value, or {@link LookupError.NotFound} when no document has this id.
    */
-  public async run(input: DeleteDocumentInput): Promise<Result<undefined, "not-found">> {
+  public async run(input: DeleteDocumentInput): Promise<Result<undefined, LookupError>> {
     const removed = await this.documents.remove(input.id);
-    return removed ? { ok: true, value: undefined } : { ok: false, error: "not-found" };
+    return removed ? { ok: true, value: undefined } : { ok: false, error: LookupError.NotFound };
   }
 }

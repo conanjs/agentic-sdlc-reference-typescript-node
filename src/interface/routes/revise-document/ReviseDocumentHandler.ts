@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
-import type { ReviseDocument } from "@/application/ReviseDocument.js";
-import type { HttpErrorMapper } from "@/interface/errors/HttpErrorMapper.js";
+import type { ReviseDocument } from "@/application/revise-document/ReviseDocument.js";
+import { DocumentsRefusal, type HttpErrorMapper } from "@/interface/errors/HttpErrorMapper.js";
 import { ReviseDocumentBody } from "./ReviseDocumentBody.js";
 
 /** Handles `PUT /documents/:id`: parses input, calls one use case and maps the result (EXP-1). */
@@ -28,7 +28,7 @@ export class ReviseDocumentHandler {
   public async handle(req: Request<{ id: string }>, res: Response): Promise<void> {
     const parsed = ReviseDocumentBody.safeParse(req.body);
     if (!parsed.success) {
-      this.errors.problemFor("invalid-request").send(res);
+      this.errors.problemFor(DocumentsRefusal.InvalidRequest).send(res);
       return;
     }
 

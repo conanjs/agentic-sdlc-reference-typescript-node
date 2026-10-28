@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { Document } from "@/domain/Document.js";
+import { Document } from "@/domain/document/Document.js";
 import { InMemoryDocumentStore } from "@/infrastructure/InMemoryDocumentStore.js";
 import { valueOf } from "@/test/support/results.js";
 import { ListDocuments } from "./ListDocuments.js";

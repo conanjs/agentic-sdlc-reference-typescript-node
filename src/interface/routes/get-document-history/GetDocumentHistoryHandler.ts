@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import type { GetDocumentHistory } from "@/application/GetDocumentHistory.js";
+import type { GetDocumentHistory } from "@/application/get-document-history/GetDocumentHistory.js";
 import type { HttpErrorMapper } from "@/interface/errors/HttpErrorMapper.js";
 
 /** Handles `GET /documents/:id/versions`: parses input, calls one use case and maps the result (EXP-1). */

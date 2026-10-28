@@ -1,9 +1,11 @@
 import type { DocumentStore } from "@/application/ports/DocumentStore.js";
 import type { DocumentView } from "@/application/DocumentView.js";
 import type { Result } from "@/domain/Result.js";
+import type { DocumentError } from "@/domain/document/DocumentError.js";
+import { LookupError } from "@/application/LookupError.js";
 
 /** Reasons a revision is refused; the interface layer maps each one to an HTTP status. */
-export type ReviseDocumentError = "not-found" | "version-conflict" | "invalid-body";
+export type ReviseDocumentError = LookupError | DocumentError;
 
 /** Input of {@link ReviseDocument.run}, already validated at the HTTP boundary. */
 export interface ReviseDocumentInput {
@@ -38,13 +40,13 @@ export class ReviseDocument {
     input: ReviseDocumentInput,
   ): Promise<Result<ReviseDocumentOutput, ReviseDocumentError>> {
     const current = await this.documents.find(input.id);
-    if (current === undefined) return { ok: false, error: "not-found" };
+    if (current === undefined) return { ok: false, error: LookupError.NotFound };
 
     const next = current.revise(input.body, input.expectedVersion);
     if (!next.ok) return next;
 
     // Saving against the version just read closes the gap between find and save:
-    // a concurrent revision in between makes this save return version-conflict.
+    // a concurrent revision in between makes this save return DocumentError.VersionConflict.
     const saved = await this.documents.save(next.value, current.version);
     if (!saved.ok) return saved;
 

@@ -1,5 +1,6 @@
 import type { DocumentStore } from "@/application/ports/DocumentStore.js";
 import type { Result } from "@/domain/Result.js";
+import { LookupError } from "@/application/LookupError.js";
 
 /** Input of {@link GetDocumentHistory.run}, already validated at the HTTP boundary. */
 export interface GetDocumentHistoryInput {
@@ -36,13 +37,13 @@ export class GetDocumentHistory {
    * Returns every stored version of one document, oldest first, read-only.
    *
    * @param input - The document's identifier, given at creation.
-   * @returns The versions as plain data, or `not-found` when no document has this id.
+   * @returns The versions as plain data, or {@link LookupError.NotFound} when no document has this id.
    */
   public async run(
     input: GetDocumentHistoryInput,
-  ): Promise<Result<GetDocumentHistoryOutput, "not-found">> {
+  ): Promise<Result<GetDocumentHistoryOutput, LookupError>> {
     const versions = await this.documents.history(input.id);
-    if (versions.length === 0) return { ok: false, error: "not-found" };
+    if (versions.length === 0) return { ok: false, error: LookupError.NotFound };
     return {
       ok: true,
       value: { id: input.id, versions: versions.map(({ version, body }) => ({ version, body })) },
