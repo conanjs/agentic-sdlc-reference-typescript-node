@@ -1,5 +1,5 @@
 import { StatusCodes } from "http-status-codes";
-import type { ReviseDocumentError } from "@/modules/documents/application/ReviseDocument.js";
+import type { ReviseDocumentError } from "@/modules/documents/application/revise-document/ReviseDocument.js";
 import { ProblemDetails } from "@/modules/shared/interface/ProblemDetails.js";
 
 /** Reasons a documents route refuses a request: the use cases' errors plus a body that failed validation. */

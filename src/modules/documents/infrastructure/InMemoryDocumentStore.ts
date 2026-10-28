@@ -1,5 +1,5 @@
 import type { DocumentStore } from "@/modules/documents/application/ports/DocumentStore.js";
-import type { Document } from "@/modules/documents/domain/Document.js";
+import type { Document } from "@/modules/documents/domain/document/Document.js";
 import type { Result } from "@/modules/shared/domain/Result.js";
 
 /** {@link DocumentStore} that keeps documents in process memory; everything is lost on restart. */

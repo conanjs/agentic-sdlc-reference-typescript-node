@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { ListDocumentsQuery } from "./ListDocumentsQuery.js";
-import type { ListDocuments } from "@/modules/documents/application/ListDocuments.js";
+import type { ListDocuments } from "@/modules/documents/application/list-documents/ListDocuments.js";
 import type { HttpErrorMapper } from "@/modules/documents/interface/errors/HttpErrorMapper.js";
 
 /** Handles `GET /documents`: parses input, calls one use case and maps the result (EXP-1). */

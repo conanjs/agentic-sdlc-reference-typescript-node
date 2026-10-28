@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import type { ReviseDocument } from "@/modules/documents/application/ReviseDocument.js";
+import type { ReviseDocument } from "@/modules/documents/application/revise-document/ReviseDocument.js";
 import type { HttpErrorMapper } from "@/modules/documents/interface/errors/HttpErrorMapper.js";
 import { ReviseDocumentBody } from "./ReviseDocumentBody.js";
 

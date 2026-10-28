@@ -1,22 +1,22 @@
 import express, { type Express } from "express";
 import type { Logger } from "pino";
-import { CreateDocument } from "@/modules/documents/application/CreateDocument.js";
-import { DeleteDocument } from "@/modules/documents/application/DeleteDocument.js";
-import { GetDocument } from "@/modules/documents/application/GetDocument.js";
-import { GetDocumentHistory } from "@/modules/documents/application/GetDocumentHistory.js";
-import { ListDocuments } from "@/modules/documents/application/ListDocuments.js";
+import { CreateDocument } from "@/modules/documents/application/create-document/CreateDocument.js";
+import { DeleteDocument } from "@/modules/documents/application/delete-document/DeleteDocument.js";
+import { GetDocument } from "@/modules/documents/application/get-document/GetDocument.js";
+import { GetDocumentHistory } from "@/modules/documents/application/get-document-history/GetDocumentHistory.js";
+import { ListDocuments } from "@/modules/documents/application/list-documents/ListDocuments.js";
 import type { DocumentIds } from "@/modules/documents/application/ports/DocumentIds.js";
 import type { DocumentStore } from "@/modules/documents/application/ports/DocumentStore.js";
-import { ReviseDocument } from "@/modules/documents/application/ReviseDocument.js";
+import { ReviseDocument } from "@/modules/documents/application/revise-document/ReviseDocument.js";
 import { InMemoryDocumentStore } from "@/modules/documents/infrastructure/InMemoryDocumentStore.js";
 import { UuidDocumentIds } from "@/modules/documents/infrastructure/UuidDocumentIds.js";
 import { HttpErrorMapper } from "@/modules/documents/interface/errors/HttpErrorMapper.js";
-import { CreateDocumentHandler } from "@/modules/documents/interface/routes/CreateDocumentHandler.js";
-import { DeleteDocumentHandler } from "@/modules/documents/interface/routes/DeleteDocumentHandler.js";
-import { GetDocumentHandler } from "@/modules/documents/interface/routes/GetDocumentHandler.js";
-import { GetDocumentHistoryHandler } from "@/modules/documents/interface/routes/GetDocumentHistoryHandler.js";
-import { ListDocumentsHandler } from "@/modules/documents/interface/routes/ListDocumentsHandler.js";
-import { ReviseDocumentHandler } from "@/modules/documents/interface/routes/ReviseDocumentHandler.js";
+import { CreateDocumentHandler } from "@/modules/documents/interface/routes/create-document/CreateDocumentHandler.js";
+import { DeleteDocumentHandler } from "@/modules/documents/interface/routes/delete-document/DeleteDocumentHandler.js";
+import { GetDocumentHandler } from "@/modules/documents/interface/routes/get-document/GetDocumentHandler.js";
+import { GetDocumentHistoryHandler } from "@/modules/documents/interface/routes/get-document-history/GetDocumentHistoryHandler.js";
+import { ListDocumentsHandler } from "@/modules/documents/interface/routes/list-documents/ListDocumentsHandler.js";
+import { ReviseDocumentHandler } from "@/modules/documents/interface/routes/revise-document/ReviseDocumentHandler.js";
 import { ErrorMiddleware } from "@/modules/shared/interface/ErrorMiddleware.js";
 
 /**

@@ -3,7 +3,7 @@ import type { Server } from "node:http";
 import { pino } from "pino";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { CompositionRoot } from "@/CompositionRoot.js";
-import { Document } from "@/modules/documents/domain/Document.js";
+import { Document } from "@/modules/documents/domain/document/Document.js";
 import { InMemoryDocumentStore } from "@/modules/documents/infrastructure/InMemoryDocumentStore.js";
 import { valueOf } from "@/test/support/results.js";
 

@@ -1,4 +1,4 @@
-import type { Document } from "@/modules/documents/domain/Document.js";
+import type { Document } from "@/modules/documents/domain/document/Document.js";
 import type { Result } from "@/modules/shared/domain/Result.js";
 
 /**

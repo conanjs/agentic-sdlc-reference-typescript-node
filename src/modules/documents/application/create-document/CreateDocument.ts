@@ -1,7 +1,7 @@
 import type { DocumentIds } from "@/modules/documents/application/ports/DocumentIds.js";
 import type { DocumentStore } from "@/modules/documents/application/ports/DocumentStore.js";
 import type { DocumentView } from "@/modules/documents/application/DocumentView.js";
-import { Document } from "@/modules/documents/domain/Document.js";
+import { Document } from "@/modules/documents/domain/document/Document.js";
 import type { Result } from "@/modules/shared/domain/Result.js";
 
 /** Input of {@link CreateDocument.run}, already validated at the HTTP boundary. */

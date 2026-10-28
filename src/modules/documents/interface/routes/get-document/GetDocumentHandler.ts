@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import type { GetDocument } from "@/modules/documents/application/GetDocument.js";
+import type { GetDocument } from "@/modules/documents/application/get-document/GetDocument.js";
 import type { HttpErrorMapper } from "@/modules/documents/interface/errors/HttpErrorMapper.js";
 
 /** Handles `GET /documents/:id`: parses input, calls one use case and maps the result (EXP-1). */
