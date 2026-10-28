@@ -18,7 +18,8 @@
     "test": "vitest run",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "smoke": "pnpm run build && node scripts/smoke-aliases.mjs",
-    "check": "pnpm run format && pnpm run lint && pnpm run typecheck && pnpm run test && pnpm run test:integration && pnpm run smoke"
+    "doc-links": "node scripts/check-doc-links.mjs",
+    "check": "pnpm run format && pnpm run lint && pnpm run typecheck && pnpm run doc-links && pnpm run test && pnpm run test:integration && pnpm run smoke"
   },
   "dependencies": {
     "express": "~5.3.0",
