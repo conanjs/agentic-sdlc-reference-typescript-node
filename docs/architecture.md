@@ -29,7 +29,7 @@ components:
     }
 ```
 
-One package, one deployable. `api` covers `src/` and `test/`. `scripts/smoke-aliases.mjs` is the only script.
+One package, one deployable. `api` covers `src/` and `test/`. Two scripts: `scripts/smoke-aliases.mjs` (the built output loads) and `scripts/check-doc-links.mjs` (every `{@link}` resolves, TSN-13).
 
 ## 4. Layers & dependency rules
 
@@ -62,7 +62,7 @@ layers:
 - Data across boundaries is plain in both directions: use cases take `<UseCase>Input` and return `<UseCase>Output`, and entities never leave `application/` (CA-4).
 - The composition root sits outside the layers: `src/CompositionRoot.ts` is the only file that imports adapters, and `src/main.ts` only starts the process.
 - Aliases use tsconfig `paths` (`@/*` to `src/*`, `@/test/*` to `test/*`), rewritten in the build by `tsc-alias` (DR-001). A relative path names only a file in the same folder (IMP-1).
-- Allowed exceptions to the alias rule: `scripts/smoke-aliases.mjs` (runs against `dist/`), and the root tool configs (`eslint.config.mjs`, `vitest.config.ts`, `vitest.integration.config.ts`).
+- Allowed exceptions to the alias rule: the files in `scripts/` (`smoke-aliases.mjs` runs against `dist/`), and the root tool configs (`eslint.config.mjs`, `vitest.config.ts`, `vitest.integration.config.ts`).
 - Enforced by `eslint.config.mjs`: `import-x/no-restricted-paths` zones (FF-1, resolved through the aliases), `import-x/no-cycle` (FF-2), and `no-restricted-imports` with `noRelativeOutsideFolder` (IMP-1). Test files are outside the layer zones, so a use-case test may use the in-memory adapter as its fake.
 
 ## 5. Data
@@ -101,7 +101,7 @@ layers:
 
 | Check                                                                                                                                                                                                                                                | Last run   | Result |
 | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------ |
-| `pnpm run check` (format, lint, typecheck, unit, integration, build, smoke)                                                                                                                                                                          | 2026-10-27 | pass   |
+| `pnpm run check` (format, lint, typecheck, doc links, unit, integration, build, smoke)                                                                                                                                                               | 2026-10-27 | pass   |
 | Lint catches seeded violations (relative path, cycle, layer zone, adapter import, R1, R7, missing doc, `@remarks` beside `{@inheritDoc}`)                                                                                                            | 2026-10-26 | pass   |
 | Lint catches seeded violations (missing `@param`, misnamed `@param`; `{@inheritDoc}` alone stays exempt)                                                                                                                                             | 2026-10-27 | pass   |
 | Lint catches a seeded vague summary (`Applies one revision.` on `ReviseDocument.run`, CMT-13); it inspects all 15 method summaries                                                                                                                   | 2026-10-27 | pass   |
@@ -113,6 +113,7 @@ layers:
 | Pure move to one folder per use case and per aggregate (MOD-10): `pnpm run check` passes with the same 16 unit and 7 integration tests; `DocumentQueries.test.ts` split into one test per use case, same 5 cases                                     | 2026-10-28 | pass   |
 | Reasons as `as const` objects (TSN-20): each value is written once in `src/`; the contract test gains a 422 case                                                                                                                                     | 2026-10-28 | pass   |
 | Lint catches a seeded `enum` (TSN-20, `noEnums`) in a use case, a domain file, `domain/Result.ts`, a Tier B file (`main.ts`), a unit test and `test/support/`                                                                                        | 2026-10-28 | pass   |
+| Every `{@link}` resolves in the editor's language service (`scripts/check-doc-links.mjs`, 43 links). It reported two links in `DocumentError.ts` to `Document`, a file that imports it rather than the reverse, and they became plain text           | 2026-10-28 | pass   |
 | `validate-project.mjs`                                                                                                                                                                                                                               | 2026-10-27 | pass   |
 
 ## 10. Known gaps / out of scope
