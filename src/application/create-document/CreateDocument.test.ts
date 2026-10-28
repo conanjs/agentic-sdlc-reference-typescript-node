@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { Document } from "@/domain/Document.js";
+import { Document } from "@/domain/document/Document.js";
 import { InMemoryDocumentStore } from "@/infrastructure/InMemoryDocumentStore.js";
 import { SequentialDocumentIds } from "@/test/support/SequentialDocumentIds.js";
 import { CreateDocument } from "./CreateDocument.js";
+import { DocumentError } from "@/domain/document/DocumentError.js";
 
 describe("CreateDocument", () => {
   it("stores version 1 under the next identifier", async () => {
@@ -22,7 +23,7 @@ describe("CreateDocument", () => {
 
     const result = await new CreateDocument(store, new SequentialDocumentIds()).run({ body });
 
-    expect(result).toEqual({ ok: false, error: "invalid-body" });
+    expect(result).toEqual({ ok: false, error: DocumentError.InvalidBody });
     expect(await store.list(undefined, 10)).toHaveLength(0);
   });
 });

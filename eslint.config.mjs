@@ -43,6 +43,29 @@ const noReExports = [
   },
 ];
 
+// TSN-20: no TypeScript enum; it is not erasable. Use an as-const object (reasons and other values
+// written in several files) or a literal union. Listed in every block that sets no-restricted-syntax.
+const noEnums = [
+  {
+    selector: "TSEnumDeclaration",
+    message: "No enum: use an as-const object or a literal union (TSN-20)",
+  },
+];
+
+// TSN-19: a status code is a named constant, never a bare number, where it is set or compared:
+// res.status(…) / res.sendStatus(…), and comparisons with anything named *status. Tests are exempt:
+// the contract test writes wire values literally on purpose.
+const statusLiteral = "Literal[value>=100][value<=599]";
+const comparison = "BinaryExpression[operator=/^([=!]==?|[<>]=?)$/]";
+const noRawStatusCodes = [
+  `CallExpression[callee.property.name=/^(status|sendStatus)$/] > ${statusLiteral}`,
+  `${comparison}:matches([left.name=/status$/i], [left.property.name=/status$/i]) > ${statusLiteral}.right`,
+  `${comparison}:matches([right.name=/status$/i], [right.property.name=/status$/i]) > ${statusLiteral}.left`,
+].map((selector) => ({
+  selector,
+  message: "Use a StatusCodes constant, not a bare status number (TSN-19)",
+}));
+
 const noFreeFunctions = [
   "Program > FunctionDeclaration",
   "Program > ExportNamedDeclaration > FunctionDeclaration",
@@ -152,19 +175,39 @@ export default tseslint.config(
   {
     files: ["src/**/*.ts"],
     ignores: [...tierB, "src/**/*.test.ts"],
-    rules: { "no-restricted-syntax": ["error", ...noFreeFunctions, ...noReExports] },
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        ...noFreeFunctions,
+        ...noReExports,
+        ...noEnums,
+        ...noRawStatusCodes,
+      ],
+    },
   },
   {
     // Tier B files keep free functions but still may not re-export.
     files: tierB,
-    rules: { "no-restricted-syntax": ["error", ...noReExports] },
+    rules: { "no-restricted-syntax": ["error", ...noReExports, ...noEnums, ...noRawStatusCodes] },
   },
   {
     files: ["src/domain/**/*.ts"],
     ignores: ["src/**/*.test.ts"],
     rules: {
-      "no-restricted-syntax": ["error", ...noFreeFunctions, ...noReExports, ...domainState],
+      "no-restricted-syntax": [
+        "error",
+        ...noFreeFunctions,
+        ...noReExports,
+        ...domainState,
+        ...noEnums,
+        ...noRawStatusCodes,
+      ],
     },
+  },
+  {
+    // Tests have no other no-restricted-syntax block, so they get the enum ban on its own.
+    files: ["src/**/*.test.ts", "test/**/*.ts"],
+    rules: { "no-restricted-syntax": ["error", ...noEnums] },
   },
   {
     // TSN-13, CMT-5, CMT-12: TSDoc on every exported declaration and public member.

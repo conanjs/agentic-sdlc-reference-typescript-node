@@ -1,6 +1,7 @@
 import type { DocumentStore } from "@/application/ports/DocumentStore.js";
 import type { DocumentView } from "@/application/DocumentView.js";
 import type { Result } from "@/domain/Result.js";
+import { LookupError } from "@/application/LookupError.js";
 
 /** Input of {@link GetDocument.run}, already validated at the HTTP boundary. */
 export interface GetDocumentInput {
@@ -21,11 +22,11 @@ export class GetDocument {
    * Returns the current version of one document, read-only.
    *
    * @param input - The document's identifier, given at creation.
-   * @returns The current version as plain data, or `not-found` when no document has this id.
+   * @returns The current version as plain data, or {@link LookupError.NotFound} when no document has this id.
    */
-  public async run(input: GetDocumentInput): Promise<Result<DocumentView, "not-found">> {
+  public async run(input: GetDocumentInput): Promise<Result<DocumentView, LookupError>> {
     const document = await this.documents.find(input.id);
-    if (document === undefined) return { ok: false, error: "not-found" };
+    if (document === undefined) return { ok: false, error: LookupError.NotFound };
     const { body, version } = document;
     return { ok: true, value: { id: input.id, body, version } };
   }
