@@ -2,7 +2,10 @@ import type { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import { CreateDocumentBody } from "./CreateDocumentBody.js";
 import type { CreateDocument } from "@/modules/documents/application/create-document/CreateDocument.js";
-import type { HttpErrorMapper } from "@/modules/documents/interface/errors/HttpErrorMapper.js";
+import {
+  DocumentsRefusal,
+  type HttpErrorMapper,
+} from "@/modules/documents/interface/errors/HttpErrorMapper.js";
 
 /** Handles `POST /documents`: parses input, calls one use case and maps the result (EXP-1). */
 export class CreateDocumentHandler {
@@ -29,7 +32,7 @@ export class CreateDocumentHandler {
   public async handle(req: Request, res: Response): Promise<void> {
     const parsed = CreateDocumentBody.safeParse(req.body);
     if (!parsed.success) {
-      this.errors.problemFor("invalid-request").send(res);
+      this.errors.problemFor(DocumentsRefusal.InvalidRequest).send(res);
       return;
     }
 

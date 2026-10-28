@@ -3,6 +3,7 @@ import { Document } from "@/modules/documents/domain/document/Document.js";
 import { InMemoryDocumentStore } from "@/modules/documents/infrastructure/InMemoryDocumentStore.js";
 import { SequentialDocumentIds } from "@/test/support/SequentialDocumentIds.js";
 import { CreateDocument } from "./CreateDocument.js";
+import { DocumentError } from "@/modules/documents/domain/document/DocumentError.js";
 
 describe("CreateDocument", () => {
   it("stores version 1 under the next identifier", async () => {
@@ -22,7 +23,7 @@ describe("CreateDocument", () => {
 
     const result = await new CreateDocument(store, new SequentialDocumentIds()).run({ body });
 
-    expect(result).toEqual({ ok: false, error: "invalid-body" });
+    expect(result).toEqual({ ok: false, error: DocumentError.InvalidBody });
     expect(await store.list(undefined, 10)).toHaveLength(0);
   });
 });

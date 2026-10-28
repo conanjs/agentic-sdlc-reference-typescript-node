@@ -3,6 +3,7 @@ import type { DocumentStore } from "@/modules/documents/application/ports/Docume
 import type { DocumentView } from "@/modules/documents/application/DocumentView.js";
 import { Document } from "@/modules/documents/domain/document/Document.js";
 import type { Result } from "@/modules/shared/domain/Result.js";
+import type { DocumentError } from "@/modules/documents/domain/document/DocumentError.js";
 
 /** Input of {@link CreateDocument.run}, already validated at the HTTP boundary. */
 export interface CreateDocumentInput {
@@ -27,10 +28,12 @@ export class CreateDocument {
    * Saves a new document at version 1 under a fresh identifier, unless the body is too long.
    *
    * @param input - The initial text, already validated at the HTTP boundary.
-   * @returns The stored document as plain data, or `invalid-body` when the text exceeds the limit.
+   * @returns The stored document as plain data, or {@link DocumentError.InvalidBody} when the text exceeds the limit.
    * @throws `Error` when the fresh identifier is already taken, which the id source promises never happens.
    */
-  public async run(input: CreateDocumentInput): Promise<Result<DocumentView, "invalid-body">> {
+  public async run(
+    input: CreateDocumentInput,
+  ): Promise<Result<DocumentView, typeof DocumentError.InvalidBody>> {
     const created = Document.create(this.ids.next(), input.body);
     if (!created.ok) return created;
 

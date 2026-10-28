@@ -7,6 +7,8 @@ import { Document } from "@/modules/documents/domain/document/Document.js";
 import { InMemoryDocumentStore } from "@/modules/documents/infrastructure/InMemoryDocumentStore.js";
 import { valueOf } from "@/test/support/results.js";
 
+// Contract test: problem types are written out literally, never taken from the code's reason objects,
+// so a changed wire value fails here instead of reaching clients unnoticed (TSN-20).
 let server: Server;
 let baseUrl: string;
 
@@ -53,6 +55,12 @@ describe("PUT /documents/:id", () => {
     const response = await put("d1", { body: "late", expectedVersion: 1 });
 
     await expectProblem(response, 409, "/problems/version-conflict", "Conflict");
+  });
+
+  it("answers 422 for a body over the length limit", async () => {
+    const response = await put("d1", { body: "x".repeat(1001), expectedVersion: 2 });
+
+    await expectProblem(response, 422, "/problems/invalid-body", "Unprocessable Entity");
   });
 
   it("answers 404 for an unknown document", async () => {

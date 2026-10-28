@@ -1,5 +1,6 @@
 import type { Document } from "@/modules/documents/domain/document/Document.js";
 import type { Result } from "@/modules/shared/domain/Result.js";
+import { DocumentError } from "@/modules/documents/domain/document/DocumentError.js";
 
 /**
  * Keeps every version of each document; the only way the use cases reach storage.
@@ -25,9 +26,12 @@ export interface DocumentStore {
    *
    * @param document - The new version, as built by {@link Document.create} or {@link Document.revise}.
    * @param replaces - Version the caller read; `0` when `document` is new.
-   * @returns The stored document, or `version-conflict` when another write got there first.
+   * @returns The stored document, or {@link DocumentError.VersionConflict} when another write got there first.
    */
-  save(document: Document, replaces: number): Promise<Result<Document, "version-conflict">>;
+  save(
+    document: Document,
+    replaces: number,
+  ): Promise<Result<Document, typeof DocumentError.VersionConflict>>;
 
   /**
    * Lists the current version of documents in ascending id order, one page at a time.

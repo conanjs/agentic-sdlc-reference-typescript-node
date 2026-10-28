@@ -1,6 +1,7 @@
 import type { DocumentStore } from "@/modules/documents/application/ports/DocumentStore.js";
 import type { Document } from "@/modules/documents/domain/document/Document.js";
 import type { Result } from "@/modules/shared/domain/Result.js";
+import { DocumentError } from "@/modules/documents/domain/document/DocumentError.js";
 
 /** {@link DocumentStore} that keeps documents in process memory; everything is lost on restart. */
 export class InMemoryDocumentStore implements DocumentStore {
@@ -19,11 +20,15 @@ export class InMemoryDocumentStore implements DocumentStore {
    * {@link DocumentStore.save} into this process's memory, atomic within this process only: two server
    * instances would each keep their own copy and could both accept a revision of one version.
    */
-  public save(document: Document, replaces: number): Promise<Result<Document, "version-conflict">> {
+  public save(
+    document: Document,
+    replaces: number,
+  ): Promise<Result<Document, typeof DocumentError.VersionConflict>> {
     // No await between the check and the write, so no other save can run in between.
     const versions = this.#versions.get(document.id) ?? [];
     const stored = versions.at(-1)?.version ?? 0;
-    if (stored !== replaces) return Promise.resolve({ ok: false, error: "version-conflict" });
+    if (stored !== replaces)
+      return Promise.resolve({ ok: false, error: DocumentError.VersionConflict });
     this.#versions.set(document.id, [...versions, document]);
     return Promise.resolve({ ok: true, value: document });
   }

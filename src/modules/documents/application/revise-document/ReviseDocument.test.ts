@@ -3,6 +3,8 @@ import { Document } from "@/modules/documents/domain/document/Document.js";
 import { InMemoryDocumentStore } from "@/modules/documents/infrastructure/InMemoryDocumentStore.js";
 import { valueOf } from "@/test/support/results.js";
 import { ReviseDocument } from "./ReviseDocument.js";
+import { LookupError } from "@/modules/documents/application/LookupError.js";
+import { DocumentError } from "@/modules/documents/domain/document/DocumentError.js";
 
 async function storeWith(body: string): Promise<InMemoryDocumentStore> {
   const store = new InMemoryDocumentStore();
@@ -33,7 +35,7 @@ describe("ReviseDocument", () => {
       expectedVersion: 1,
     });
 
-    expect(result).toEqual({ ok: false, error: "not-found" });
+    expect(result).toEqual({ ok: false, error: LookupError.NotFound });
   });
 
   it("lets only one of two writers based on the same version win", async () => {
@@ -46,6 +48,8 @@ describe("ReviseDocument", () => {
     ]);
 
     expect(results.filter((r) => r.ok)).toHaveLength(1);
-    expect(results.filter((r) => !r.ok && r.error === "version-conflict")).toHaveLength(1);
+    expect(results.filter((r) => !r.ok && r.error === DocumentError.VersionConflict)).toHaveLength(
+      1,
+    );
   });
 });
