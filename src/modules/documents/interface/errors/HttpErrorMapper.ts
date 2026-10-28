@@ -1,18 +1,30 @@
 import { StatusCodes } from "http-status-codes";
-import type { ReviseDocumentError } from "@/modules/documents/application/ReviseDocument.js";
+import { LookupError } from "@/modules/documents/application/LookupError.js";
+import { DocumentError } from "@/modules/documents/domain/document/DocumentError.js";
 import { ProblemDetails } from "@/modules/shared/interface/ProblemDetails.js";
 
-/** Reasons a documents route refuses a request: the use cases' errors plus a body that failed validation. */
-export type DocumentsRefusal = ReviseDocumentError | "invalid-request";
+/**
+ * Reasons a documents route refuses a request: the use cases' errors plus a request that failed
+ * validation. Each value is defined once, in the layer that owns it, and spread in here.
+ */
+export const DocumentsRefusal = {
+  ...DocumentError,
+  ...LookupError,
+  /** The body or query string failed the route's schema. */
+  InvalidRequest: "invalid-request",
+} as const;
+
+/** One of the {@link DocumentsRefusal} values: every reason {@link HttpErrorMapper.problemFor} accepts. */
+export type DocumentsRefusal = (typeof DocumentsRefusal)[keyof typeof DocumentsRefusal];
 
 /** The single place that turns this module's refusals into HTTP problems (TSN-11, EXP-5, EXP-8). */
 export class HttpErrorMapper {
   // A Record over the union makes the compiler reject a new refusal that has no status.
   readonly #statuses: Readonly<Record<DocumentsRefusal, number>> = {
-    "invalid-request": StatusCodes.BAD_REQUEST,
-    "not-found": StatusCodes.NOT_FOUND,
-    "version-conflict": StatusCodes.CONFLICT,
-    "invalid-body": StatusCodes.UNPROCESSABLE_ENTITY,
+    [DocumentsRefusal.InvalidRequest]: StatusCodes.BAD_REQUEST,
+    [DocumentsRefusal.NotFound]: StatusCodes.NOT_FOUND,
+    [DocumentsRefusal.VersionConflict]: StatusCodes.CONFLICT,
+    [DocumentsRefusal.InvalidBody]: StatusCodes.UNPROCESSABLE_ENTITY,
   };
 
   /**

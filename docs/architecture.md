@@ -1,7 +1,7 @@
 ---
 schema: repo-architecture/v2
-last-updated: 2026-10-27
-updated-by: specs/001-revise-document (DR-002)
+last-updated: 2026-10-28
+updated-by: v4.0.0 (MOD-10, TSN-20)
 ---
 
 # Architecture: typescript-node reference
@@ -29,7 +29,7 @@ components:
     }
 ```
 
-One package, one deployable. `api` covers `src/` and `test/`. `scripts/smoke-aliases.mjs` is the only script.
+One package, one deployable. `api` covers `src/` and `test/`. Two scripts: `scripts/smoke-aliases.mjs` (the built output loads) and `scripts/check-doc-links.mjs` (every `{@link}` resolves, TSN-13).
 
 ## 4. Layers & dependency rules
 
@@ -51,13 +51,14 @@ modules:
       name: documents,
       path: src/modules/documents/,
       may-depend-on: [shared],
-      public: ["application/*.ts"],
+      public: ["application/**", "!application/ports/**"],
       alias: "@/modules/documents/",
     }
 ```
 
 - Layout: **feature-first** (MOD-9, DR-002), with every module under `src/modules/` (DR-004), `shared` included. Every module has the four layer folders; the layer paths above are relative to each module. `shared/` holds no feature code, imports no module, and keeps its empty layer folders with a `.gitkeep`.
-- Public surface (MOD-3, IMP-5): another module may import only `documents/application/*.ts`, the use cases and their input/output types, never `application/ports/`, `domain/`, `infrastructure/` or `interface/`. There are no re-export files (TSN-18).
+- Inside a module (MOD-10): `application/` and `interface/routes/` hold one kebab-case folder per use case (`application/revise-document/ReviseDocument.ts` and its test, `interface/routes/revise-document/{ReviseDocumentHandler, ReviseDocumentBody}.ts`), and `domain/` one folder per aggregate (`domain/document/Document.ts`, `DocumentError.ts`). Depth shows scope: a file in a use-case or aggregate folder serves only that one; a file at a layer root (`application/DocumentView.ts`, `application/LookupError.ts`, `application/ports/`, `interface/errors/`) is shared by several use cases of the module; `modules/shared/` is shared by several modules.
+- Public surface (MOD-3, IMP-5): another module may import only `documents/application/**` outside `ports/`: the use cases with their input/output types, and the shared files at the layer root (`DocumentView`, `LookupError`), never `application/ports/`, `domain/`, `infrastructure/` or `interface/`. There are no re-export files (TSN-18).
 - Direction, inside every module: `interface -> application -> domain`, and `infrastructure -> application, domain` (adapters implement ports declared in `application/ports/`). Between modules: `documents -> shared`. No other edges, no cycles.
 - Ports, by role:
   - **Input port:** the public `run()` of each use case. There is no separate interface; the controller depends on the use-case class.
@@ -67,7 +68,7 @@ modules:
 - Data across boundaries is plain in both directions: use cases take `<UseCase>Input` and return `<UseCase>Output`, and entities never leave `application/` (CA-4). The same plain types are what another module sees.
 - The composition root sits outside the layers: `src/CompositionRoot.ts` is the only file that imports adapters, and `src/main.ts` only starts the process.
 - Aliases use tsconfig `paths` (`@/*` to `src/*`, so `@/modules/documents/…` and `@/modules/shared/…`; `@/test/*` to `test/*`), rewritten in the build by `tsc-alias` (DR-001). A relative path names only a file in the same folder (IMP-1).
-- Allowed exceptions to the alias rule: `scripts/smoke-aliases.mjs` (runs against `dist/`), and the root tool configs (`eslint.config.mjs`, `vitest.config.ts`, `vitest.integration.config.ts`).
+- Allowed exceptions to the alias rule: the files in `scripts/` (`smoke-aliases.mjs` runs against `dist/`), and the root tool configs (`eslint.config.mjs`, `vitest.config.ts`, `vitest.integration.config.ts`).
 - Enforced by `eslint.config.mjs`: `import-x/no-restricted-paths` layer zones per module and module zones (FF-1, MOD-3, MOD-4; resolved through the aliases; the module list is read from `src/`), `noReExports` (TSN-18), `import-x/no-cycle` (FF-2), and `no-restricted-imports` with `noRelativeOutsideFolder` (IMP-1). Test files are outside the layer zones, so a use-case test may use the in-memory adapter as its fake.
 
 ## 5. Data
@@ -87,6 +88,8 @@ modules:
 - **Config:** `src/modules/shared/infrastructure/config.ts` validates `PORT` and `LOG_LEVEL` once at startup and freezes the result (TSN-9).
 - **Logging:** one pino logger created in `main.ts` and injected; `no-console` in lint (TSN-10).
 - **Errors:** expected failures are `Result` values. Each module's `HttpErrorMapper` turns its refusals into RFC 9457 problems (`application/problem+json`, `type` `/problems/<reason>`), and `modules/shared/interface/ErrorMiddleware` turns thrown errors into `about:blank` problems, logging every 500 (TSN-11, EXP-5, EXP-8). Status constants come from `http-status-codes`, imported only under `interface/` (TSN-19, DR-003). Why there: `ProblemDetails` and `ErrorMiddleware` sit in `modules/shared/interface/` because every module sends the same body shape and a thrown error belongs to no module; `shared` imports no feature module (MOD-4), so each module's mapper depends on `shared` and never the reverse. Status codes stay in `interface/` because a status is an HTTP delivery detail: `domain` and `application` express a refusal as a `Result` reason, so a CLI or queue consumer can reuse the same use case and choose its own exit code or retry.
+- **Problem types:** each `type` the API sends, with its title, status and meaning, is listed in `docs/problem-types.md` (RFC 9457 §4 asks every new problem type to document these).
+- **Reasons:** every refusal reason is an `as const` object with a derived type of the same name, written once in the layer that owns it: `DocumentError` (`domain/document/`), `LookupError` (`application/`) and `DocumentsRefusal` (`interface/errors/`, which spreads both and adds `InvalidRequest`). Code names a reason by its key; the HTTP contract test writes the problem types out literally, so a changed value fails there (TSN-20). No `enum` anywhere; lint's `noEnums` selector rejects one.
 - **Input validation:** zod schema `ReviseDocumentBody` at the HTTP boundary, strict (EXP-7).
 - Tier B files: `src/main.ts` (process entry point), `src/modules/shared/infrastructure/config.ts` (config declaration). Everything else is Tier A (classes); lint enforces the list (PDM-class-modeled-R7).
 
@@ -106,7 +109,7 @@ modules:
 
 | Check                                                                                                                                                                                                                                                                                                                                                                   | Last run   | Result |
 | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------ |
-| `pnpm run check` (format, lint, typecheck, unit, integration, build, smoke)                                                                                                                                                                                                                                                                                             | 2026-10-27 | pass   |
+| `pnpm run check` (format, lint, typecheck, doc links, unit, integration, build, smoke)                                                                                                                                                                                                                                                                                  | 2026-10-27 | pass   |
 | Lint catches seeded violations (relative path, cycle, layer zone, adapter import, R1, R7, missing doc, `@remarks` beside `{@inheritDoc}`)                                                                                                                                                                                                                               | 2026-10-26 | pass   |
 | Lint catches seeded violations (missing `@param`, misnamed `@param`; `{@inheritDoc}` alone stays exempt)                                                                                                                                                                                                                                                                | 2026-10-27 | pass   |
 | Lint catches a seeded vague summary (`Applies one revision.` on `ReviseDocument.run`, CMT-13); it inspects all 15 method summaries                                                                                                                                                                                                                                      | 2026-10-27 | pass   |
@@ -118,6 +121,11 @@ modules:
 | Lint catches a seeded `http-status-codes` import in `application/` (TSN-19), with the relative-path rule still active in that block                                                                                                                                                                                                                                     | 2026-10-27 | pass   |
 | Pure move to `src/modules/` (DR-004): `pnpm run check` passes with the same 7 unit and 5 integration tests, unchanged                                                                                                                                                                                                                                                   | 2026-10-28 | pass   |
 | Document lifecycle (spec 002): unit tests for each new use case, and an integration test that creates (201 + `Location`), reads, lists, revises, reads the history, deletes (204), then gets a 404 problem; a 400 problem for `limit=500`                                                                                                                               | 2026-10-28 | pass   |
+| Pure move to one folder per use case and per aggregate (MOD-10): `pnpm run check` passes with the same 16 unit and 7 integration tests; `DocumentQueries.test.ts` split into one test per use case, same 5 cases                                                                                                                                                        | 2026-10-28 | pass   |
+| Reasons as `as const` objects (TSN-20): each value is written once in `src/`; removing one entry from the mapper fails `tsc` (TS2741); changing `VersionConflict`'s value passes `tsc` and the unit tests and fails only the 409 contract test; the contract test gains a 422 case                                                                                      | 2026-10-28 | pass   |
+| Lint catches a seeded `enum` (TSN-20, `noEnums`) in a use case, a domain file, a shared file, a Tier B file (`main.ts`), a unit test and `test/support/`                                                                                                                                                                                                                | 2026-10-28 | pass   |
+| Every `{@link}` resolves in the editor's language service (`scripts/check-doc-links.mjs`, 43 links). It reported two links in `DocumentError.ts` to `Document`, a file that imports it rather than the reverse, and they became plain text                                                                                                                              | 2026-10-28 | pass   |
+| Lint catches a bare status number (TSN-19, `noRawStatusCodes`) in `res.status(404)`, `res.sendStatus(204)`, `err.status === 400` and `500 < status`, and ignores arithmetic (`status / 100`) and numbers outside 100–599; it found the one real case, `status >= 500` in `ErrorMiddleware`                                                                              | 2026-10-28 | pass   |
 | `validate-project.mjs`                                                                                                                                                                                                                                                                                                                                                  | 2026-10-27 | pass   |
 
 ## 10. Known gaps / out of scope

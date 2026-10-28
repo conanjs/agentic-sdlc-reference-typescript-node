@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
-import type { DeleteDocument } from "@/modules/documents/application/DeleteDocument.js";
+import type { DeleteDocument } from "@/modules/documents/application/delete-document/DeleteDocument.js";
 import type { HttpErrorMapper } from "@/modules/documents/interface/errors/HttpErrorMapper.js";
 
 /** Handles `DELETE /documents/:id`: parses input, calls one use case and maps the result (EXP-1). */
