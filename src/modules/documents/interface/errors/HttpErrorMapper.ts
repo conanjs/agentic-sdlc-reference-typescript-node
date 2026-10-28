@@ -2,17 +2,13 @@ import { StatusCodes } from "http-status-codes";
 import { LookupError } from "@/modules/documents/application/LookupError.js";
 import { DocumentError } from "@/modules/documents/domain/document/DocumentError.js";
 import { ProblemDetails } from "@/modules/shared/interface/ProblemDetails.js";
+import { RequestError } from "@/modules/shared/interface/RequestError.js";
 
 /**
  * Reasons a documents route refuses a request: the use cases' errors plus a request that failed
  * validation. Each value is defined once, in the layer that owns it, and spread in here.
  */
-export const DocumentsRefusal = {
-  ...DocumentError,
-  ...LookupError,
-  /** The body or query string failed the route's schema. */
-  InvalidRequest: "invalid-request",
-} as const;
+export const DocumentsRefusal = { ...DocumentError, ...LookupError, ...RequestError } as const;
 
 /** One of the {@link DocumentsRefusal} values: every reason {@link HttpErrorMapper.problemFor} accepts. */
 export type DocumentsRefusal = (typeof DocumentsRefusal)[keyof typeof DocumentsRefusal];

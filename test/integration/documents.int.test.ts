@@ -5,6 +5,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { CompositionRoot } from "@/CompositionRoot.js";
 import { Document } from "@/modules/documents/domain/document/Document.js";
 import { InMemoryDocumentStore } from "@/modules/documents/infrastructure/InMemoryDocumentStore.js";
+import { expectProblem } from "@/test/support/http.js";
 import { valueOf } from "@/test/support/results.js";
 
 // Contract test: problem types are written out literally, never taken from the code's reason objects,
@@ -31,12 +32,6 @@ function put(id: string, body: unknown): Promise<Response> {
     headers: { "content-type": "application/json" },
     body: typeof body === "string" ? body : JSON.stringify(body),
   });
-}
-
-async function expectProblem(response: Response, status: number, type: string, title: string) {
-  expect(response.status).toBe(status);
-  expect(response.headers.get("content-type")).toMatch(/^application\/problem\+json/);
-  expect(await response.json()).toEqual({ type, title, status });
 }
 
 describe("PUT /documents/:id", () => {

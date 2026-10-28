@@ -1,7 +1,7 @@
-import type { DocumentIds } from "@/modules/documents/application/ports/DocumentIds.js";
 import type { DocumentStore } from "@/modules/documents/application/ports/DocumentStore.js";
 import type { DocumentView } from "@/modules/documents/application/DocumentView.js";
 import { Document } from "@/modules/documents/domain/document/Document.js";
+import type { IdSource } from "@/modules/shared/application/ports/IdSource.js";
 import type { Result } from "@/modules/shared/domain/Result.js";
 import type { DocumentError } from "@/modules/documents/domain/document/DocumentError.js";
 
@@ -21,7 +21,7 @@ export class CreateDocument {
    */
   public constructor(
     private readonly documents: DocumentStore,
-    private readonly ids: DocumentIds,
+    private readonly ids: IdSource,
   ) {}
 
   /**
