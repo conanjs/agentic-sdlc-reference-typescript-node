@@ -5,6 +5,10 @@ import { ProblemDetails } from "@/modules/shared/interface/ProblemDetails.js";
 
 /** Turns errors thrown anywhere in a request into problem responses, for every module (EXP-5, EXP-8). */
 export class ErrorMiddleware {
+  // A status's first digit is its class (RFC 9110 §15), so every code from 500 up is a server error.
+  // Typed as number: StatusCodes is an enum, and comparing it with a plain number fails lint.
+  static readonly #FIRST_SERVER_ERROR: number = StatusCodes.INTERNAL_SERVER_ERROR;
+
   /**
    * Binds the middleware to the logger that records unexpected failures.
    *
@@ -26,7 +30,8 @@ export class ErrorMiddleware {
         typeof err === "object" && err !== null && "status" in err && typeof err.status === "number"
           ? err.status
           : StatusCodes.INTERNAL_SERVER_ERROR;
-      if (status >= 500) this.logger.error({ err }, "request.failed");
+      if (status >= ErrorMiddleware.#FIRST_SERVER_ERROR)
+        this.logger.error({ err }, "request.failed");
       ProblemDetails.generic(status).send(res);
     };
   }

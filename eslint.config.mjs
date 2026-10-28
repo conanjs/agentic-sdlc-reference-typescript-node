@@ -53,6 +53,20 @@ const noEnums = [
   },
 ];
 
+// TSN-19: a status code is a named constant, never a bare number, where it is set or compared:
+// res.status(…) / res.sendStatus(…), and comparisons with anything named *status. Tests are exempt:
+// the contract test writes wire values literally on purpose.
+const statusLiteral = "Literal[value>=100][value<=599]";
+const comparison = "BinaryExpression[operator=/^([=!]==?|[<>]=?)$/]";
+const noRawStatusCodes = [
+  `CallExpression[callee.property.name=/^(status|sendStatus)$/] > ${statusLiteral}`,
+  `${comparison}:matches([left.name=/status$/i], [left.property.name=/status$/i]) > ${statusLiteral}.right`,
+  `${comparison}:matches([right.name=/status$/i], [right.property.name=/status$/i]) > ${statusLiteral}.left`,
+].map((selector) => ({
+  selector,
+  message: "Use a StatusCodes constant, not a bare status number (TSN-19)",
+}));
+
 const noFreeFunctions = [
   "Program > FunctionDeclaration",
   "Program > ExportNamedDeclaration > FunctionDeclaration",
@@ -202,12 +216,20 @@ export default tseslint.config(
   {
     files: ["src/**/*.ts"],
     ignores: [...tierB, "src/**/*.test.ts"],
-    rules: { "no-restricted-syntax": ["error", ...noFreeFunctions, ...noReExports, ...noEnums] },
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        ...noFreeFunctions,
+        ...noReExports,
+        ...noEnums,
+        ...noRawStatusCodes,
+      ],
+    },
   },
   {
     // Tier B files keep free functions but still may not re-export.
     files: tierB,
-    rules: { "no-restricted-syntax": ["error", ...noReExports, ...noEnums] },
+    rules: { "no-restricted-syntax": ["error", ...noReExports, ...noEnums, ...noRawStatusCodes] },
   },
   {
     files: ["src/modules/*/domain/**/*.ts"],
@@ -219,6 +241,7 @@ export default tseslint.config(
         ...noReExports,
         ...domainState,
         ...noEnums,
+        ...noRawStatusCodes,
       ],
     },
   },
