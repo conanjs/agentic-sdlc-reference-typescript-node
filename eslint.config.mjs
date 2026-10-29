@@ -124,25 +124,40 @@ const layerZones = [
   },
 ];
 
-// MOD-3, IMP-5, TSN-17: a module reaches another only through its public surface, the use cases and their
-// input/output types in application/ (not ports/); shared/ uses no module (MOD-4).
+// Which module may use which: the may-depend-on edges of docs/architecture.md §4. A module that is not
+// listed may use none, so a new module starts isolated until an edge is added here and there.
+const mayDependOn = { comments: ["documents"] };
+
+// MOD-3, IMP-5, TSN-17: a module reaches another only along an allowed edge and only through its public
+// surface, the use cases and their input/output types in application/ (not ports/); any other pair is
+// blocked outright, so a dependency cannot point the wrong way. shared/ uses no module (MOD-4).
 const moduleZones = [
   ...modules.flatMap((target) =>
     modules
       .filter((from) => from !== target)
-      .flatMap((from) => [
-        {
-          target: `./src/modules/${target}`,
-          from: `./src/modules/${from}`,
-          except: ["./application"],
-          message: `${target} may import only ${from}/application (MOD-3)`,
-        },
-        {
-          target: `./src/modules/${target}`,
-          from: `./src/modules/${from}/application/ports`,
-          message: `Ports of ${from} are not public (MOD-3)`,
-        },
-      ]),
+      .flatMap((from) =>
+        (mayDependOn[target] ?? []).includes(from)
+          ? [
+              {
+                target: `./src/modules/${target}`,
+                from: `./src/modules/${from}`,
+                except: ["./application"],
+                message: `${target} may import only ${from}/application (MOD-3)`,
+              },
+              {
+                target: `./src/modules/${target}`,
+                from: `./src/modules/${from}/application/ports`,
+                message: `Ports of ${from} are not public (MOD-3)`,
+              },
+            ]
+          : [
+              {
+                target: `./src/modules/${target}`,
+                from: `./src/modules/${from}`,
+                message: `${target} may not depend on ${from}: not an edge in docs/architecture.md §4 (MOD-3)`,
+              },
+            ],
+      ),
   ),
   ...modules.map((from) => ({
     target: "./src/modules/shared",

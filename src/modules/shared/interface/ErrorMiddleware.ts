@@ -2,6 +2,7 @@ import type { ErrorRequestHandler } from "express";
 import { StatusCodes } from "http-status-codes";
 import type { Logger } from "pino";
 import { ProblemDetails } from "@/modules/shared/interface/ProblemDetails.js";
+import { RequestLogMiddleware } from "./RequestLogMiddleware.js";
 
 /** Turns errors thrown anywhere in a request into problem responses, for every module (EXP-5, EXP-8). */
 export class ErrorMiddleware {
@@ -12,7 +13,7 @@ export class ErrorMiddleware {
   /**
    * Binds the middleware to the logger that records unexpected failures.
    *
-   * @param logger - Receives one `request.failed` event per 500 response, with the error; the client
+   * @param logger - Receives one `request.failed` event per 500 response, with the error and the request id; the client
    *   never sees it.
    */
   public constructor(private readonly logger: Logger) {}
@@ -31,7 +32,10 @@ export class ErrorMiddleware {
           ? err.status
           : StatusCodes.INTERNAL_SERVER_ERROR;
       if (status >= ErrorMiddleware.#FIRST_SERVER_ERROR)
-        this.logger.error({ err }, "request.failed");
+        this.logger.error(
+          { err, requestId: res.getHeader(RequestLogMiddleware.HEADER) },
+          "request.failed",
+        );
       ProblemDetails.generic(status).send(res);
     };
   }
