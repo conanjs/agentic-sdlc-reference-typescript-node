@@ -4,8 +4,13 @@
 Feature: Alias smoke check
   The built dist/ must load with plain Node, which only works when every @/ alias was rewritten to a relative path.
 
+  # dist/ is git-ignored, so the scenarios write the built file themselves rather than keep it as a fixture.
   Background:
-    Given the fixture "smoke"
+    Given the file "dist/CompositionRoot.js" contains:
+      """
+      // A built composition root whose imports are all relative, as tsc-alias leaves them.
+      export {};
+      """
 
   Scenario: A build with relative imports loads
     When the script "smoke-aliases.mjs" runs
