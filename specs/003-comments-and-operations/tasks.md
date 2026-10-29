@@ -17,3 +17,5 @@ The task plan for the comments module, the health route and request ids, in the 
       touches: none · refs: none · procedure: none · hot-path: no
 - [x] T207 [US2] Answer requests no route serves with an about:blank 404 problem, and log requests the client aborts (src/modules/shared/interface/) [Eng] [llm]
       touches: none · refs: none · procedure: none · hot-path: no
+- [x] T208 [US1] Move each module's routes into a router class built from injected use cases (src/modules/documents/interface/routes/, src/modules/comments/interface/routes/) [Eng] [llm]
+      touches: none · refs: none · procedure: none · hot-path: no

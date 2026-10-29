@@ -35,13 +35,13 @@ Decision records for the comments module, the health route and request ids (`dec
 - **Supersedes:** none
 - **Decided by:** engineering · **Approved at:** 2026-10-28
 
-## DR-010: Per-module HttpErrorMapper, renamed on import
+## DR-010: One router per module, built from injected use cases
 
-- **Tree path:** framework TSN-11 (one mapper per module), NAM-8 (file name equals the class)
-- **Criteria:** each module keeps its own mapper; the folder already says which module it belongs to; the composition root must import two of them.
-- **Options considered:** keep `HttpErrorMapper` in each module and rename on import in the composition root (`DocumentsErrorMapper`, `CommentsErrorMapper`) | prefix the class names in the modules
-- **Chosen:** rename on import, in the composition root only, the one file that imports both.
-- **Rejected:** prefixing — a longer name in every handler of every module, to solve a clash that exists in one file.
-- **Confidence:** medium (revisit if more files need several mappers)
+- **Tree path:** framework EXP-2 (route modules compose routers; the dependency graph is built elsewhere), TSN-11 (one mapper per module), NAM-8 (file name equals the class)
+- **Criteria:** `app()` stays readable as modules are added; each module's paths sit with that module; adapters stay known to the composition root only; each module keeps its mapper named `HttpErrorMapper`.
+- **Options considered:** one route table in `CompositionRoot.app()`, with the mappers renamed on import (`DocumentsErrorMapper`, `CommentsErrorMapper`) | a router class per module in `interface/routes/`, given already-built use cases, mounted at the root with full paths | the same, mounted under a prefix (`app.use("/documents", …)`, comments with `mergeParams`) | a router per module that also builds its use cases from the stores
+- **Chosen:** a router class per module (`DocumentsRouter`, `CommentsRouter`) taking a `<Module>UseCases` object and building the handlers and the module's mapper; full paths, mounted at the root. The composition root builds the use cases in one private method per module and shares `GetDocument` between both.
+- **Rejected:** one route table — every new route adds a handler, an import and a line to one growing method, and the root imports every module's mapper, so the names clash; a prefix — the handlers type the parent's `:id` in `req.params`, which a child router's path does not declare (tested 2026-10-29 with `@types/express` 5.0.6: `TS2345`, `Property 'id' is missing`, with or without `mergeParams: true`), and a module's full URLs are no longer in one file; building use cases in the router — the router would need the ports and the id source, which is the graph EXP-2 keeps in the composition root.
+- **Confidence:** high
 - **Supersedes:** none
-- **Decided by:** engineering · **Approved at:** 2026-10-28
+- **Decided by:** engineering · **Approved at:** 2026-10-29
