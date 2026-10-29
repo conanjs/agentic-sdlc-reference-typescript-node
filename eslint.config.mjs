@@ -99,7 +99,8 @@ const modules = readdirSync("src/modules", { withFileTypes: true })
   .filter((d) => d.isDirectory() && d.name !== "shared")
   .map((d) => d.name);
 
-// FF-1, TSN-17: layer direction from docs/architecture.md §4, inside every module and shared/. A glob zone is
+// FF-1, TSN-17: layer direction from docs/architecture.md §4, inside every module and shared/, plus the module
+// composers' two zones (MOD-11). A glob zone is
 // matched against the full file path, so each one ends in /** (a bare folder glob matches no file). Adapters are
 // reachable only from the composition root (PDM-class-modeled-R9). Zones are resolved paths, so aliases
 // cannot bypass them.
@@ -121,6 +122,19 @@ const layerZones = [
   {
     target: ["./src/!(CompositionRoot|main).ts", "./src/modules/**"],
     from: ["./src/CompositionRoot.ts", "./src/main.ts"],
+  },
+  // MOD-11 (wiring shape W2): a module composer at the module root builds its module's use cases and router on
+  // adapters it is given, so it never imports one; and no layer imports a composer (only the composition root does).
+  {
+    target: "./src/modules/*/*Module.ts",
+    from: "./src/modules/*/infrastructure/**",
+    message:
+      "A module composer receives adapters from the composition root (MOD-11, PDM-class-modeled-R9)",
+  },
+  {
+    target: "./src/modules/*/@(domain|application|infrastructure|interface)/**",
+    from: "./src/modules/*/*Module.ts",
+    message: "Only the composition root imports a module composer (MOD-11)",
   },
 ];
 
