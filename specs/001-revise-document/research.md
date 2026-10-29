@@ -33,7 +33,7 @@ Decision records for the reference implementation (`decision-record/v2`).
 - **Rejected:** stay layer-first — that is the opt-in case, already kept on `layout/layer-first`.
 - **Confidence:** high
 - **Supersedes:** none
-- **Decided by:** owner (V) · **Approved at:** 2026-10-27
+- **Decided by:** human · **Approved at:** 2026-10-27
 
 ## DR-003: HTTP status-code source for api
 
@@ -44,7 +44,7 @@ Decision records for the reference implementation (`decision-record/v2`).
 - **Rejected:** `http-status` (pick it for codes outside the IANA registry); hand-written constants (duplication as routes grow); `STATUS_CODES` (reason phrases only, no named constants).
 - **Confidence:** high
 - **Supersedes:** none
-- **Decided by:** owner (V) · **Approved at:** 2026-10-27
+- **Decided by:** human · **Approved at:** 2026-10-27
 
 ## DR-004: Modules under src/modules/ for api
 
@@ -55,4 +55,4 @@ Decision records for the reference implementation (`decision-record/v2`).
 - **Rejected:** `features/` — `shared` is not a feature, so it would have to stay outside, and one bounded context may hold several features; modules directly under `src/` — ambiguous once non-module folders appear.
 - **Confidence:** high
 - **Supersedes:** none
-- **Decided by:** owner (V) · **Approved at:** 2026-10-28
+- **Decided by:** human · **Approved at:** 2026-10-28
